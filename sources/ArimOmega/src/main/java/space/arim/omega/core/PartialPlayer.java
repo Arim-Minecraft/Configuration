@@ -18,11 +18,11 @@
  */
 package space.arim.omega.core;
 
-public abstract class PartialPlayer {
+abstract class PartialPlayer {
 
 	abstract void begin(Omega manager);
 	
-	abstract void joinStats();
+	abstract void joinLoading();
 	
 	abstract void setRank(Rank rank);
 	

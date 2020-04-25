@@ -54,6 +54,22 @@ public class Omega implements AsyncStartingModule {
 	
 	private final Executor syncExecutor;
 	
+	/**
+	 * Minutes within a month, equal to 1440 (seconds in a day) times 30 (days in a month). <br>
+	 * Sort of like a unix timestamp but in minutes, not seconds, to save space. <br>
+	 * <br>
+	 * This is used with the monthly reward of the player, which is also in minutes.
+	 * 
+	 */
+	static final int MINUTES_IN_MONTH = 1440 * 30;
+	
+	/**
+	 * Milliseconds within a minute, used to divide into System.currentTimeMillis
+	 * to get the current unix time in minutes.
+	 * 
+	 */
+	static final int MILLIS_IN_MINUTE = 60000;
+	
 	public Omega(JavaPlugin plugin, Logger logger) {
 		this.plugin = plugin;
 		this.logger = logger;
@@ -101,17 +117,70 @@ public class Omega implements AsyncStartingModule {
 	}
 	
 	/**
-	 * Gets an online OmegaPlyer
+	 * Gets a player by UUID. <code>null</code> if not online or loaded.
 	 * 
 	 * @param uuid the player uuid
-	 * @return the omega player
+	 * @return the omega player or <code>null</code> if not loaded
 	 */
-	public OmegaPlayer getPlayer(UUID uuid) {
+	OmegaPlayer getPlayer(UUID uuid) {
 		return players.get(uuid);
 	}
 	
-	void add(UUID uuid, PartialPlayer player) {
-		players.put(uuid, player.finish());
+	/**
+	 * Gets an online OmegaPlyer
+	 * 
+	 * @param player the player
+	 * @return the omega player
+	 */
+	public OmegaPlayer getPlayer(Player player) {
+		return getPlayer(player.getUniqueId());
+	}
+	
+	/**
+	 * Activates the monthly reward for the player. <br>
+	 * Remember to check player permissions first, only ranked players
+	 * have access to monthly rewards. <br>
+	 * <br>
+	 * This will return <code>false</code> the player's last reward
+	 * is not more than a month ago or there was a concurrency error. <br>
+	 * If <code>true</code> is returned, the value of the player's last reward
+	 * is automatically set to the current time.
+	 * 
+	 * @param omega the omega manager
+	 * @return true if the reward was activated and reset, false otherwise
+	 */
+	public boolean activateMonthlyRank(Player player) {
+		MutableStats stats = getPlayer(player).getStats();
+		int existing = stats.getMonthly_reward().get();
+		int time = (int) (System.currentTimeMillis() / MILLIS_IN_MINUTE);
+		return (time - existing > MINUTES_IN_MONTH) && stats.getMonthly_reward().compareAndSet(existing, time);
+	}
+	
+	/**
+	 * Reloads the player's rank based on permissions. <br>
+	 * Will also update any displays in chat or tablist.
+	 * 
+	 * @param player the player
+	 */
+	public void refreshRank(Player player) {
+		OmegaPlayer p = getPlayer(player);
+		p.setRank(findRank(player));
+		p.applyDisplayNames(player);
+	}
+	
+	/**
+	 * Finishes the partial player, adds the omega player to the loaded players map,
+	 * and returns the completed OmegaPlayer
+	 * 
+	 * @param player the player
+	 * @param partial the partial player
+	 * @return the omega player
+	 */
+	OmegaPlayer add(Player player, PartialPlayer partial) {
+		partial.setRank(findRank(player));
+		OmegaPlayer p = partial.finish();
+		players.put(player.getUniqueId(), p);
+		return p;
 	}
 	
 	/**
@@ -127,7 +196,7 @@ public class Omega implements AsyncStartingModule {
 		return CompletableFuture.supplyAsync(supplier, syncExecutor);
 	}
 	
-	Rank findRank(Player player) {
+	private Rank findRank(Player player) {
 		for (int n = 0; n < ranks.size(); n++) {
 			Rank rank = ranks.get(n);
 			if (player.hasPermission(rank.getPermission())) {

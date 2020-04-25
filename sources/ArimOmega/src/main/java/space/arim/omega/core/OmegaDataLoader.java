@@ -78,7 +78,7 @@ public class OmegaDataLoader implements Listener{
 		UUID uuid = evt.getUniqueId();
 		if (evt.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
 
-			pending.getIfPresent(uuid).joinStats();
+			pending.getIfPresent(uuid).joinLoading();
 		} else { // discard
 			pending.invalidate(uuid);
 		}
@@ -95,13 +95,12 @@ public class OmegaDataLoader implements Listener{
 	@EventHandler(priority = EventPriority.MONITOR)
 	private void onLogin_complete(PlayerLoginEvent evt) {
 
-		Player player = evt.getPlayer();
-		UUID uuid = player.getUniqueId();
-		if (evt.getResult() == PlayerLoginEvent.Result.ALLOWED) {
+		UUID uuid = evt.getPlayer().getUniqueId();
 
-			PartialPlayer partial = pending.getIfPresent(uuid);
-			partial.setRank(manager.findRank(player));
-		} else {
+		PartialPlayer partial = pending.getIfPresent(uuid);
+		assert partial != null;
+
+		if (evt.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 			// discard
 			pending.invalidate(uuid);
 		}
@@ -110,8 +109,11 @@ public class OmegaDataLoader implements Listener{
 	@EventHandler(priority = EventPriority.LOWEST)
 	private void onPlayerJoin(PlayerJoinEvent evt) {
 
-		UUID uuid = evt.getPlayer().getUniqueId();
-		manager.add(uuid, pending.getIfPresent(uuid));
+		Player player = evt.getPlayer();
+		UUID uuid = player.getUniqueId();
+
+		manager.add(player, pending.getIfPresent(uuid)).applyDisplayNames(player);
+		
 		pending.invalidate(uuid);
 	}
 

@@ -18,34 +18,58 @@
  */
 package space.arim.omega.core;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import lombok.Getter;
+class PendingPlayer extends PartialPlayer {
 
-public class PendingPlayer extends PartialPlayer {
-
-	@Getter
-	private final transient UUID uuid;
+	private final UUID uuid;
 	
-	private volatile CompletableFuture<SqlPlayerStats> futureStats;
+	private volatile CompletableFuture<MutableStats> futureStats;
+	private volatile CompletableFuture<MutablePrefs> futurePrefs;
 	private volatile Rank rank;
 	
-	public PendingPlayer(UUID uuid) {
+	PendingPlayer(UUID uuid) {
 		this.uuid = uuid;
 	}
 	
 	@Override
 	void begin(Omega manager) {
-		//CompletableFuture<?>[] futures = new CompletableFuture<?>[4];
-		
-		// TODO still working on this
-		futureStats = null;
+		OmegaSql sql = manager.sql;
+		futureStats = sql.supplyAsync(() -> {
+			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_stats` WHERE `uuid` = ?", uuid)) {
+				if (!rs.next()) {
+					// default statistics, starting balance of $3000, monthly reward immediately available
+					return new MutableStats(3000L, 0, 0, 0, 0,
+							(int) (System.currentTimeMillis() / Omega.MILLIS_IN_MINUTE - Omega.MINUTES_IN_MONTH));
+				}
+				return new MutableStats(rs.getLong("balance"), rs.getInt("kitpvp_kills"), rs.getInt("kitpvp_deaths"),
+						rs.getInt("combo_kills"), rs.getInt("combo_deaths"), rs.getInt("monthly_reward"));
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return null;
+		});
+		futurePrefs = sql.supplyAsync(() -> {
+			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_prefs` WHERE `uuid` = ?", uuid)) {
+				if (!rs.next()) {
+					return new MutablePrefs(MutablePrefs.DEFAULT_TOGGLE_PREFS, "&f", "&b", MutablePrefs.stringToMap("<empty>"));
+				}
+				return new MutablePrefs(rs.getByte("toggle_prefs"), rs.getString("chat_colour"), rs.getString("name_colour"),
+						MutablePrefs.stringToMap(rs.getString("friended_ignored")));
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return null;
+		});
 	}
 	
 	@Override
-	void joinStats() {
+	void joinLoading() {
 		futureStats.join();
+		futurePrefs.join();
 	}
 	
 	@Override
@@ -55,7 +79,7 @@ public class PendingPlayer extends PartialPlayer {
 	
 	@Override
 	OmegaPlayer finish() {
-		return new OmegaPlayer(uuid, rank, futureStats.join());
+		return new OmegaPlayer(uuid, rank, futureStats.join(), futurePrefs.join());
 	}
 	
 	@Override

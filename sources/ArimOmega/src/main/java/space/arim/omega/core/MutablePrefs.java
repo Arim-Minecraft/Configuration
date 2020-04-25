@@ -18,65 +18,193 @@
  */
 package space.arim.omega.core;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
+
+import space.arim.api.uuid.UUIDUtil;
 
 import lombok.Getter;
 import lombok.Setter;
 
 public class MutablePrefs {
 
-	@Getter
-	private final AtomicBoolean tree;
-	@Getter
-	private final AtomicBoolean item;
-	@Getter
-	private final AtomicBoolean msg;
+	/**
+	 * There are 8 on/off preferences. <br>
+	 * <br>
+	 * We would use separate booleans to represent these, but for performance purposes,
+	 * we use a AtomicInteger which is essentially an "AtomicByte". <br>
+	 * The byte's bits correspond to a boolean array of length 8. <br>
+	 * <br>
+	 * Since this is really an array of booleans, we refer to the index of the preference. <br>
+	 * "Indexes" are described in {@link #togglePreference(int)} <br>
+	 * <br>
+	 * MySQL doesn't have a boolean data type, so using an integer also saves disk space.
+	 * 
+	 */
+	final AtomicInteger toggle_prefs;
+	
+	/**
+	 * The default preferences
+	 * autotree = false
+	 * autoitem = false
+	 * pms = true
+	 * sounds = true
+	 * bypasspms = false
+	 * sidebar = true
+	 * kit descriptions = true
+	 * world chat = true
+	 * 
+	 */
+	static final byte DEFAULT_TOGGLE_PREFS = (byte) byteFromBooleanArray(new boolean[] {false, false, true, true, false, true, true, true});
+	
 	@Getter
 	@Setter
-	private volatile String colour;
+	private volatile String chatcolour;
 	@Getter
 	@Setter
 	private volatile String namecolour;
-	@Getter
-	private final AtomicBoolean sound;
-	@Getter
-	private final AtomicBoolean bypasspm;
-	@Getter
-	private final AtomicBoolean sidebar;
-	@Getter
-	@Setter
-	private volatile KitDesc kitdesc;
-	@Getter
-	private final AtomicBoolean worldchat;
-	@Getter
-	private final List<UUID> friends;
-	@Getter
-	private final List<UUID> ignored;
 	
-	MutablePrefs(boolean tree, boolean item, boolean msg, String colour, String namecolour, boolean sound,
-			boolean bypasspm, boolean sidebar, int kitdesc, boolean worldchat, List<UUID> friends, List<UUID> ignored) {
-		this.tree = new AtomicBoolean(tree);
-		this.item = new AtomicBoolean(item);
-		this.msg = new AtomicBoolean(msg);
-		this.colour = colour;
+	private final Map<UUID, Boolean> friended_ignored;
+	
+	MutablePrefs(byte toggle_prefs, String chat_colour, String namecolour, Map<UUID, Boolean> friended_ignored) {
+		this.toggle_prefs = new AtomicInteger(toggle_prefs);
+		this.chatcolour = chat_colour;
 		this.namecolour = namecolour;
-		this.sound = new AtomicBoolean(sound);
-		this.bypasspm = new AtomicBoolean(bypasspm);
-		this.sidebar = new AtomicBoolean(sidebar);
-		this.kitdesc = KitDesc.values()[kitdesc];
-		this.worldchat = new AtomicBoolean(worldchat);
-		this.friends = friends;
-		this.ignored = ignored;
+		this.friended_ignored = friended_ignored;
 	}
 	
-	public enum KitDesc {
+	/**
+	 * Converts a map of friended/ignored players to a string.
+	 * 
+	 * @param map the map
+	 * @return the string
+	 */
+	static String mapToString(Map<UUID, Boolean> map) {
+		StringBuilder builder = new StringBuilder();
+		map.forEach((uuid, value) -> {
+			builder.append(',').append(uuid.toString().replace("-", "")).append(':').append((value) ? '1' : '0');
+		});
+		return (builder.length() == 0) ? "<empty>" : builder.substring(1);
+	}
+	
+	/**
+	 * Converts a raw string of friended/ignored players to a map.
+	 * 
+	 * @param raw the string
+	 * @return the map
+	 */
+	static Map<UUID, Boolean> stringToMap(String raw) {
+		Map<UUID, Boolean> result = new HashMap<>();
+		if (!raw.equals("<empty>")) {
+			for (String node : raw.split(",")) {
+				String[] subNodes = node.split(":");
+				result.put(UUIDUtil.expandAndParse(subNodes[0]), subNodes[1].equals("1"));
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Toggles an on/off preference according to its index and returns the updated result. <br>
+	 * <br>
+	 * 0 {@literal -} AutoTree, true indicates on <br>
+	 * 1 {@literal -} AutoItem, true indicates on <br>
+	 * 2 {@literal -} PMs, true indicates PMs are allowed <br>
+	 * 3 {@literal -} Sounds, true indicates custom sounds permitted <br>
+	 * 4 {@literal -} Bypass PMs, true indicates ability to bypass others' PMs setting <br>
+	 * 5 {@literal -} Sidebar, false disables the scoreboard <br>
+	 * 6 {@literal -} Kit descriptions, false reduces kit description verbosity <br>
+	 * 7 {@literal -} World chat, false only shows chat from the same world as the player <br>
+	 *  <br>
+	 *  <b>Note that bypassing PMs is an excalibur+ rank feature, so remember to check permissions.</b>
+	 * 
+	 * @param index the index of the preferences
+	 * @return the updated state
+	 */
+	public boolean togglePreference(int index) {
+		assert 0 <= index && index <= 8;
 		
-		ON,
-		PARTIAL,
-		OFF;
-		
+		// using bytes creates a lot of unnecessary casting
+		int existing;
+		int update;
+		boolean result;
+		do {
+			existing = toggle_prefs.get();
+			boolean[] change = booleanArrayFromByte(existing);
+			result = change[index] = !change[index];
+			update = byteFromBooleanArray(change);
+		} while (!compareAndSet(toggle_prefs, existing, update));
+		return result;
+	}
+	
+	/**
+	 * Map of friended and ignored players. <br>
+	 * <b>The map is not synchronised! You must synchronise on the map!</b> <br>
+	 * <br>
+	 * A value of <code>true</code> indicates a friend,
+	 * while <code>false</code> an ignored user. <br>
+	 * <br>
+	 * Furthermore, users of this map should limit the amount of friends to 50
+	 * and the amount of ignored also to 50. This should be done within the
+	 * synchronised block in which the map is operated on.
+	 * 
+	 */
+	public Map<UUID, Boolean> getFriended_ignored() {
+		return friended_ignored;
+	}
+	
+	/*
+	 * Faster version of AtomicInteger#compareAndSet
+	 * See https://dzone.com/articles/wanna-get-faster-wait-bit
+	 */
+	
+	private static boolean compareAndSet(AtomicInteger atomInt, int expect, int update) {
+		if (!atomInt.compareAndSet(expect, update)) {
+			LockSupport.parkNanos(1L);
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Converts the bits of a byte to a boolean array. <br>
+	 * E.g., 11110101 => true, true, true, true, false, true, false true
+	 * 
+	 * @param source the source byte, really an int to avoid casting
+	 * @return the boolean array
+	 */
+	private static boolean[] booleanArrayFromByte(int source) {
+		boolean[] result = new boolean[8];
+	    result[0] = ((source & 0x01) != 0);
+	    result[1] = ((source & 0x02) != 0);
+	    result[2] = ((source & 0x04) != 0);
+	    result[3] = ((source & 0x08) != 0);
+	    result[4] = ((source & 0x10) != 0);
+	    result[5] = ((source & 0x20) != 0);
+	    result[6] = ((source & 0x40) != 0);
+	    result[7] = ((source & 0x80) != 0);
+	    return result;
+	}
+	
+	/**
+	 * Converts a boolean array to a byte, where each boolean
+	 * determines a bit of the array. <br>
+	 * <br>
+	 * This is the inverse operation of {@link #booleanArrayFromByte(int)}. <br>
+	 * Note that the source array must have length 8.
+	 * 
+	 * @param source the boolean array
+	 * @return an int rather than a byte to avoid casting
+	 */
+	private static int byteFromBooleanArray(boolean[] source) {
+		assert source.length == 8;
+
+		return ((source[7] ? 1<<7 : 0) + (source[6] ? 1<<6 : 0) + (source[5] ? 1<<5 : 0) + 
+                (source[4] ? 1<<4 : 0) + (source[3] ? 1<<3 : 0) + (source[2] ? 1<<2 : 0) + 
+                (source[1] ? 1<<1 : 0) + (source[0] ? 1 : 0));
 	}
 	
 }

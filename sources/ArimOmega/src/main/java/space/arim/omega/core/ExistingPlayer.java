@@ -18,11 +18,11 @@
  */
 package space.arim.omega.core;
 
-public class ExistingPlayer extends PartialPlayer {
+class ExistingPlayer extends PartialPlayer {
 
 	private final OmegaPlayer player;
 	
-	public ExistingPlayer(OmegaPlayer player) {
+	ExistingPlayer(OmegaPlayer player) {
 		this.player = player;
 	}
 	
@@ -32,7 +32,7 @@ public class ExistingPlayer extends PartialPlayer {
 	}
 	
 	@Override
-	void joinStats() {
+	void joinLoading() {
 		
 	}
 	

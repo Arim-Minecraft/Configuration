@@ -22,23 +22,20 @@ import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import space.arim.api.sql.ExecutableQuery;
 import space.arim.api.sql.PooledLoggingSql;
-
-import lombok.Getter;
 
 public class OmegaSql extends PooledLoggingSql {
 
 	private final Logger logger;
 	private final HikariDataSource dataSource;
 	
-	@Getter
 	private final Executor asyncExecutor;
 	
 	OmegaSql(Logger logger, String host, int port, String database, String url, String username, String password, int connections) {
@@ -58,25 +55,58 @@ public class OmegaSql extends PooledLoggingSql {
 		dataSource = new HikariDataSource(config);
 	}
 	
+	/**
+	 * Creates the stats table if it does not exist.
+	 * 
+	 * @return a future indicating the progress
+	 */
 	CompletableFuture<?> makeStatsTableIfNotExist() {
-		return connectAsync(() -> {
+		return executeAsync(() -> {
 			try {
-				// TODO define tables
-				executionQueries(new ExecutableQuery("CREATE TABLE IF NOT EXISTS `kitpvp_stats`"));
+				executionQuery("CREATE TABLE IF NOT EXISTS `omega_stats` ("
+						+ "`uuid` VARCHAR(32) PRIMARY KEY,"
+						+ "`balance` BIGINT NOT NULL,"
+						+ "`kitpvp_kills` INT NOT NULL,"
+						+ "`kitpvp_deaths` INT NOT NULL,"
+						+ "`combo_kills` INT NOT NULL,"
+						+ "`combo_deaths` INT NOT NULL,"
+						+ "`monthly_reward` INT NOT NULL)");
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
 		});
 	}
 	
+	/**
+	 * Creates the preferences table if it does not exist. <br>
+	 * <br>
+	 * The friended_ignored column has a max size of dependent on the implementation of its serialised form.
+	 * See {@link MutablePrefs#getFriended_ignored()} and {@link MutablePrefs#mapToString(java.util.Map)}. <br>
+	 * Thus, the max size of the column is 50 * (32 + 1 + 1) + 50 * (32 + 1 + 1) + 99, or 3499.
+	 * 
+	 * @return a future indicating the progress
+	 */
 	CompletableFuture<?> makePrefsTableIfNotExist() {
-		return connectAsync(() -> {
-			
+		return executeAsync(() -> {
+			try {
+				executionQuery("CREATE TABLE IF NOT EXISTS `omega_prefs` ("
+						+ "`uuid` VARCHAR(32) PRIMARY KEY,"
+						+ "`toggle_prefs` TINYINT NOT NULL,"
+						+ "`chat_colour` CHAR(2) NOT NULL,"
+						+ "`name_colour` CHAR(2) NOT NULL,"
+						+ "`friended_ignored` VARCHAR(3499) NOT NULL)");
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
 		});
 	}
 	
-	CompletableFuture<?> connectAsync(Runnable cmd) {
+	CompletableFuture<?> executeAsync(Runnable cmd) {
 		return CompletableFuture.runAsync(cmd, asyncExecutor);
+	}
+	
+	<T> CompletableFuture<T> supplyAsync(Supplier<T> supplier) {
+		return CompletableFuture.supplyAsync(supplier, asyncExecutor);
 	}
 	
 	@Override

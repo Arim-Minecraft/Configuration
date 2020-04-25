@@ -22,12 +22,9 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.bukkit.Bukkit;
-
-import space.arim.api.sql.ExecutableQuery;
+import org.bukkit.entity.Player;
 
 import lombok.Getter;
 
@@ -45,39 +42,43 @@ public class OmegaPlayer {
 	// Stats table
 	
 	@Getter
-	private final AtomicLong balance;
-	@Getter
-	private final AtomicInteger kitpvp_kills;
-	@Getter
-	private final AtomicInteger kitpvp_deaths;
-	@Getter
-	private final AtomicInteger combo_kills;
-	@Getter
-	private final AtomicInteger combo_deaths;
-	@Getter
-	private final AtomicLong monthly_reward;
+	private final MutableStats stats;
 	
 	// Prefs table
 	
 	@Getter
 	private final MutablePrefs prefs;
 	
+	// Prevent saving twice
+	
 	private final AtomicBoolean isCurrentlySaving = new AtomicBoolean(false);
 	
-	OmegaPlayer(UUID uuid, Rank rank, SqlPlayerStats stats) {
+	OmegaPlayer(UUID uuid, Rank rank, MutableStats stats, MutablePrefs prefs) {
 		this.uuid = uuid;
 		this.rank = rank;
-		this.balance = new AtomicLong(stats.getBalance());
-		this.kitpvp_kills = new AtomicInteger(stats.getKitpvp_kills());
-		this.kitpvp_deaths = new AtomicInteger(stats.getKitpvp_deaths());
-		this.combo_kills = new AtomicInteger(stats.getCombo_kills());
-		this.combo_deaths = new AtomicInteger(stats.getCombo_deaths());
-		this.prefs = stats.getPrefs();
-		this.monthly_reward = new AtomicLong(stats.getMonthly_reward());
+		this.stats = stats;
+		this.prefs = prefs;
 	}
 	
+	/**
+	 * Sets the rank of the OmegaPlayer
+	 * 
+	 * @param rank the rank
+	 */
 	void setRank(Rank rank) {
 		this.rank = rank;
+	}
+	
+	/**
+	 * Applies the rank display/tag and name/chat colour prefs of this OmegaPlayer to the player.
+	 * 
+	 * @param player the player, should be the same actual player as this one
+	 */
+	void applyDisplayNames(Player player) {
+		assert player.getUniqueId().equals(uuid);
+
+		player.setDisplayName(rank.getDisplay() + " " + prefs.getChatcolour() + player.getName());
+		player.setPlayerListName(rank.getTag() + " " + prefs.getNamecolour() + player.getName());
 	}
 	
 	/**
@@ -87,7 +88,7 @@ public class OmegaPlayer {
 	 * @return a completable future representing the saving and unloading
 	 */
 	CompletableFuture<?> save(Omega manager) {
-		CompletableFuture<?>[] futures = new CompletableFuture<?>[4];
+		CompletableFuture<?>[] futures = new CompletableFuture<?>[2];
 		OmegaSql sql = manager.sql;
 
 		if (!isCurrentlySaving.compareAndSet(false, true)) {
@@ -95,9 +96,38 @@ public class OmegaPlayer {
 		}
 
 		// TODO still working on this
-		futures[0] = sql.connectAsync(() -> {
+		futures[0] = sql.executeAsync(() -> {
 			try {
-				sql.executionQueries(new ExecutableQuery(" ", kitpvp_kills.get(), kitpvp_deaths.get()));
+				long balance = stats.getBalance().get();
+				int kitpvp_kills = stats.getKitpvp_kills().get();
+				int kitpvp_deaths = stats.getKitpvp_deaths().get();
+				int combo_kills = stats.getCombo_kills().get();
+				int combo_deaths = stats.getCombo_deaths().get();
+				long monthly_reward = stats.getMonthly_reward().get();
+				sql.executionQuery("INSERT INTO `omega_stats` "
+						+ "(`uuid`, `balance`, `kitpvp_kills`, `kitpvp_deaths`, `combo_kills`, `combo_deaths`, `monthly_reward`) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?) "
+						+ "ON DUPLICATE KEY UPDATE "
+						+ "`balance` = ?, `kitpvp_kills` = ?, `kitpvp_deaths` = ?, `combo_kills` = ?, `combo_deaths` = ?, `monthly_reward` = ?",
+						uuid.toString().replace("-", ""), balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward,
+						balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward);
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+		});
+		futures[1] = sql.executeAsync(() -> {
+			try {
+				byte toggle_prefs = (byte) prefs.toggle_prefs.get();
+				String chat_colour = prefs.getChatcolour();
+				String name_colour = prefs.getNamecolour();
+				String friended_ignored = MutablePrefs.mapToString(prefs.getFriended_ignored());
+				sql.executionQuery("INSERT INTO `omega_prefs` "
+						+ "(`uuid`, `toggle_prefs`, `chat_colour`, `name_colour`, `friended_ignored`) "
+						+ "VALUES (?, ?, ?, ?, ?) "
+						+ "ON DUPLICATE KEY UPDATE "
+						+ "`toggle_prefs` = ?, `chat_colour` = ?, `name_colour` = ?, `friended_ignored` = ?",
+						uuid, toggle_prefs, chat_colour, name_colour, friended_ignored,
+						toggle_prefs, chat_colour, name_colour, friended_ignored);
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
