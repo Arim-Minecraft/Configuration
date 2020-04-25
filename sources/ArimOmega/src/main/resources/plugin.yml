@@ -1,0 +1,7 @@
+name: ${project.name}
+main: space.arim.omega.plugin.OmegaPlugin
+version: ${project.version}
+author: A248
+description: ${project.description}
+depend: [ArimAPI, ServerStarter, Vault]
+load: STARTUP

@@ -1,0 +1,8 @@
+host: 'localhost'
+port: 3306
+database: 'omega'
+url: 'jdbc:mysql://%HOST%:%PORT%/%DATABASE%?autoReconnect=true&useUnicode=true&characterEncoding=utf8&serverTimezone=UTC'
+username: 'ArimOmega'
+password: 'defaultpassword'
+connections: 4
+version: 1

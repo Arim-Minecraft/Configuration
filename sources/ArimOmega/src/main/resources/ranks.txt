@@ -1,0 +1,48 @@
+Owner
+&4Owner&r
+&4Owner&r
+&4Owner&r ||ttp:&7Rank: &4Owner&7. &dClick to apply for staff.||url:https://www.arim.space/apply
+CoOwner
+&4Co&f-&4Owner&r
+&4Co&f-&4Owner&r
+&4Co&f-&4Owner&r ||ttp:&7Rank: &4Co-Owner&7. &dClick to apply for staff.||url:https://www.arim.space/apply
+Dev
+&cDev&r
+&cDev&r
+&cDev&r ||ttp:&7Rank: &cDev&7. &dClick to apply for staff.||url:https://www.arim.space/apply
+Admin
+&2Admin&r
+&2Admin&r
+&2Admin&r ||ttp:&7Rank: &2Admin&7. &dClick to apply for staff.||url:https://www.arim.space/apply
+Mod
+&6Mod&r
+&6Mod&r
+&6Mod&r ||ttp:&7Rank: &6Mod&7. &dClick to apply for staff.||url:https://www.arim.space/apply
+Helper
+&3Helper&r
+&3Helper&r
+&3Helper&r ||ttp:&7Rank: &3Helper&7. &dClick to apply for staff.||url:https://www.arim.space/apply
+Builder
+&9Builder&r
+&9Builder&r
+&9Builder&r ||ttp:&7Rank: &9Builder&7. &dClick to apply for staff.||url:https://www.arim.space/apply
+Overlord
+&6&l[&r&4Overlord&6&l]&r
+&6&l[&r&4Overlord&6&l]&r
+&6&l[&r&4Overlord&6&l]&r ||ttp:&7Rank: &4Overlord&7. &dClick to purchase a rank.||url:https://www.arim.space/shop
+Warrior
+&6&l[&r&3Warrior&6&l]&r
+&6&l[&r&3Warrior&6&l]&r
+&6&l[&r&3Warrior&6&l]&r ||ttp:&7Rank: &eWarrior&7. &dClick to purchase a rank.||url:https://www.arim.space/shop
+Leader
+&6&l[&r&aLeader&6&l]&r
+&6&l[&r&aLeader&6&l]&r
+&6&l[&r&aLeader&6&l]&r ||ttp:&7Rank: &eLeader&7. &dClick to purchase a rank.||url:https://www.arim.space/shop
+Excalibur
+&6&l[&r&5Excalibur&6&l]&r
+&6&l[&r&5Excalibur&6&l]&r
+&6&l[&r&5Excalibur&6&l]&r ||ttp:&7Rank: &5Excalibur&7. &dClick to get a rank.||url:https://www.arim.space/shop
+YouTube
+&7[&9YT&7]&r
+&7[&9YT&7]&r
+&7[&9YT&7]&r ||ttp:&7Rank: &cYouTube&7. &dRequires at least 1000 subs, more qualifications apply.
