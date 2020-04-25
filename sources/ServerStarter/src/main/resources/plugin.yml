@@ -1,0 +1,5 @@
+name: ${project.name}
+main: space.arim.serverstarter.ServerStarter
+version: ${project.version}
+author: A248
+load: STARTUP
