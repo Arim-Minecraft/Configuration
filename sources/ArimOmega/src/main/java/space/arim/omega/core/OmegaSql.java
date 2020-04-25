@@ -58,7 +58,7 @@ public class OmegaSql extends PooledLoggingSql {
 		dataSource = new HikariDataSource(config);
 	}
 	
-	CompletableFuture<?> makeTablesIfNotExist() {
+	CompletableFuture<?> makeStatsTableIfNotExist() {
 		return connectAsync(() -> {
 			try {
 				// TODO define tables
@@ -66,6 +66,12 @@ public class OmegaSql extends PooledLoggingSql {
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
+		});
+	}
+	
+	CompletableFuture<?> makePrefsTableIfNotExist() {
+		return connectAsync(() -> {
+			
 		});
 	}
 	

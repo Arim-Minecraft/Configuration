@@ -73,7 +73,7 @@ public class Omega implements AsyncStartingModule {
 	
 	@Override
 	public void startLoad() {
-		future = CompletableFuture.allOf(sql.makeTablesIfNotExist(), CompletableFuture.runAsync(() -> {
+		future = CompletableFuture.allOf(sql.makeStatsTableIfNotExist(), sql.makePrefsTableIfNotExist(), CompletableFuture.runAsync(() -> {
 			HashMap<Integer, Rank> ranks = new HashMap<>();
 			try (Scanner scanner = new Scanner(new File(plugin.getDataFolder(), "ranks.txt"), "UTF-8")) {
 				ArrayList<String> lines = new ArrayList<>(4);
