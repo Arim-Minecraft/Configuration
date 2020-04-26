@@ -23,7 +23,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import lombok.Getter;
@@ -135,19 +134,24 @@ public class OmegaPlayer {
 
 		return CompletableFuture.allOf(futures).thenRunAsync(() -> {
 			isCurrentlySaving.set(false);
-			if (!isOnlineThreadSafe(omega)) {
+			if (!isOnline(omega)) {
 				omega.remove(uuid);
 			}
 		});
 	}
 
-	public boolean isOnlineThreadSafe(Omega omega) {
-		return (Bukkit.isPrimaryThread()) ? Bukkit.getPlayer(uuid) != null
-				: omega.supplySynced(() -> Bukkit.getPlayer(uuid) != null).join();
+	/**
+	 * Checks whether the corresponding player is online in a thread safe manner
+	 * 
+	 * @param omega the omega manager
+	 * @return true if online, false otherwise
+	 */
+	public boolean isOnline(Omega omega) {
+		return omega.getTransientPlayer(uuid) != null;
 	}
 
 	void removeIfOfflineUnlessSaving(Omega omega) {
-		if (!isCurrentlySaving.get() && !isOnlineThreadSafe(omega) && !isCurrentlySaving.get()) {
+		if (!isCurrentlySaving.get() && !isOnline(omega)) {
 			omega.remove(uuid);
 		}
 	}

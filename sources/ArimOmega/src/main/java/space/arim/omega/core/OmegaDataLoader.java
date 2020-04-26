@@ -113,16 +113,21 @@ public class OmegaDataLoader implements Listener{
 		UUID uuid = player.getUniqueId();
 
 		omega.add(player, pending.getIfPresent(uuid)).applyDisplayNames(player);
-		
+		omega.transients.put(uuid, new TransientPlayer());
+
 		pending.invalidate(uuid);
 	}
 
-	// TODO Using priority MONITOR until we can transition away from Skript
-	// at which point we'll use LOWEST to start saving ASAP
 	@EventHandler(priority = EventPriority.MONITOR)
 	private void onPlayerQuit(PlayerQuitEvent evt) {
 
-		omega.getPlayer(evt.getPlayer().getUniqueId()).save(omega);
+		UUID uuid = evt.getPlayer().getUniqueId();
+
+		omega.transients.remove(uuid);
+
+		// TODO Using priority MONITOR until we can transition away from Skript
+		// at which point we'll move this to LOWEST to start saving ASAP
+		omega.getPlayer(uuid).save(omega);
 	}
 
 }

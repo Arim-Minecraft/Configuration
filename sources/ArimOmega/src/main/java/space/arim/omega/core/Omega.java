@@ -28,8 +28,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 
@@ -48,6 +46,8 @@ public class Omega implements AsyncStartingModule {
 	private final JavaPlugin plugin;
 	private final ConcurrentHashMap<UUID, OmegaPlayer> players = new ConcurrentHashMap<>();
 	
+	final ConcurrentHashMap<UUID, TransientPlayer> transients = new ConcurrentHashMap<>();
+	
 	final Logger logger;
 	final OmegaSql sql;
 	final OmegaDataLoader loader;
@@ -55,8 +55,6 @@ public class Omega implements AsyncStartingModule {
 	private Map<Integer, Rank> ranks;
 	
 	private CompletableFuture<?> future;
-	
-	private final Executor syncExecutor;
 	
 	/**
 	 * Minutes within a month, equal to 1440 (seconds in a day) times 30 (days in a month). <br>
@@ -77,8 +75,6 @@ public class Omega implements AsyncStartingModule {
 	public Omega(JavaPlugin plugin, Logger logger) {
 		this.plugin = plugin;
 		this.logger = logger;
-
-		syncExecutor = (cmd) -> Bukkit.getServer().getScheduler().runTask(plugin, cmd);
 
 		SimpleConfig sqlCfg = new SimpleConfig(plugin.getDataFolder(), "sql.yml", "version") {};
 		sqlCfg.reload();
@@ -152,6 +148,28 @@ public class Omega implements AsyncStartingModule {
 	}
 	
 	/**
+	 * Gets a transient player by UUID. <code>null</code> if not online. <br>
+	 * <b>Transient player info is not thread safe</b>
+	 * 
+	 * @param uuid the player uuid
+	 * @return the transient player or <code>null</code> if offline
+	 */
+	TransientPlayer getTransientPlayer(UUID uuid) {
+		return transients.get(uuid);
+	}
+	
+	/**
+	 * Gets transient player information. <br>
+	 * <b>Transient player info is not thread safe</b>
+	 * 
+	 * @param player the player
+	 * @return the transient player
+	 */
+	public TransientPlayer getTransientPlayer(Player player) {
+		return getTransientPlayer(player.getUniqueId());
+	}
+	
+	/**
 	 * Activates the monthly reward for the player. <br>
 	 * Remember to check player permissions first, only ranked players
 	 * have access to monthly rewards. <br>
@@ -205,10 +223,6 @@ public class Omega implements AsyncStartingModule {
 	 */
 	void remove(UUID uuid) {
 		players.remove(uuid);
-	}
-	
-	<T> CompletableFuture<T> supplySynced(Supplier<T> supplier) {
-		return CompletableFuture.supplyAsync(supplier, syncExecutor);
 	}
 	
 	private Rank findRank(Player player) {
