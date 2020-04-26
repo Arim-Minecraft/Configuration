@@ -44,22 +44,22 @@ import space.arim.serverstarter.ServerStarter;
  */
 public class OmegaDataLoader implements Listener{
 
-	private final Omega manager;
+	private final Omega omega;
 	
 	final Cache<UUID, PartialPlayer> pending;
 	
-	OmegaDataLoader(final Omega manager) {
-		this.manager = manager;
+	OmegaDataLoader(final Omega omega) {
+		this.omega = omega;
 		ServerStarter.afterAllowed = this::onAPPLE_start;
 		pending = Caffeine.newBuilder().expireAfterWrite(3, TimeUnit.MINUTES)
-				.<UUID, PartialPlayer>removalListener((uuid, partial, cause) -> partial.abort(manager)).build();
+				.<UUID, PartialPlayer>removalListener((uuid, partial, cause) -> partial.abort(omega)).build();
 	}
 	
 	private void onAPPLE_start(AsyncPlayerPreLoginEvent evt) {
 
 		PartialPlayer partial;
 
-		OmegaPlayer existing = manager.getPlayer(evt.getUniqueId());
+		OmegaPlayer existing = omega.getPlayer(evt.getUniqueId());
 		if (existing == null) {
 			partial = new PendingPlayer(evt.getUniqueId());
 
@@ -69,7 +69,7 @@ public class OmegaDataLoader implements Listener{
 		}
 		pending.put(evt.getUniqueId(), partial);
 
-		partial.begin(manager);
+		partial.begin(omega);
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -112,7 +112,7 @@ public class OmegaDataLoader implements Listener{
 		Player player = evt.getPlayer();
 		UUID uuid = player.getUniqueId();
 
-		manager.add(player, pending.getIfPresent(uuid)).applyDisplayNames(player);
+		omega.add(player, pending.getIfPresent(uuid)).applyDisplayNames(player);
 		
 		pending.invalidate(uuid);
 	}
@@ -122,7 +122,7 @@ public class OmegaDataLoader implements Listener{
 	@EventHandler(priority = EventPriority.MONITOR)
 	private void onPlayerQuit(PlayerQuitEvent evt) {
 
-		manager.getPlayer(evt.getPlayer().getUniqueId()).save(manager);
+		omega.getPlayer(evt.getPlayer().getUniqueId()).save(omega);
 	}
 
 }

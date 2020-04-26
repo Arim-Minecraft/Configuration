@@ -84,12 +84,12 @@ public class OmegaPlayer {
 	/**
 	 * Saves and unloads the OmegaPlayer
 	 * 
-	 * @param manager the omega manager
+	 * @param omega the omega manager
 	 * @return a completable future representing the saving and unloading
 	 */
-	CompletableFuture<?> save(Omega manager) {
+	CompletableFuture<?> save(Omega omega) {
 		CompletableFuture<?>[] futures = new CompletableFuture<?>[2];
-		OmegaSql sql = manager.sql;
+		OmegaSql sql = omega.sql;
 
 		if (!isCurrentlySaving.compareAndSet(false, true)) {
 			return CompletableFuture.completedFuture(null);
@@ -135,8 +135,8 @@ public class OmegaPlayer {
 
 		return CompletableFuture.allOf(futures).thenRunAsync(() -> {
 			isCurrentlySaving.set(false);
-			if (!isOnlineThreadSafe(manager)) {
-				manager.remove(uuid);
+			if (!isOnlineThreadSafe(omega)) {
+				omega.remove(uuid);
 			}
 		});
 	}
@@ -146,9 +146,9 @@ public class OmegaPlayer {
 				: omega.supplySynced(() -> Bukkit.getPlayer(uuid) != null).join();
 	}
 
-	void removeIfOfflineUnlessSaving(Omega manager) {
-		if (!isCurrentlySaving.get() && !isOnlineThreadSafe(manager) && !isCurrentlySaving.get()) {
-			manager.remove(uuid);
+	void removeIfOfflineUnlessSaving(Omega omega) {
+		if (!isCurrentlySaving.get() && !isOnlineThreadSafe(omega) && !isCurrentlySaving.get()) {
+			omega.remove(uuid);
 		}
 	}
 

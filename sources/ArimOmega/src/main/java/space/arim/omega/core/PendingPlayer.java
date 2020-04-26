@@ -36,8 +36,8 @@ class PendingPlayer extends PartialPlayer {
 	}
 	
 	@Override
-	void begin(Omega manager) {
-		OmegaSql sql = manager.sql;
+	void begin(Omega omega) {
+		OmegaSql sql = omega.sql;
 		futureStats = sql.supplyAsync(() -> {
 			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_stats` WHERE `uuid` = ?", uuid)) {
 				if (!rs.next()) {
@@ -83,8 +83,9 @@ class PendingPlayer extends PartialPlayer {
 	}
 	
 	@Override
-	void abort(Omega manager) {
+	void abort(Omega omega) {
 		futureStats = null;
+		futurePrefs = null;
 	}
 	
 }

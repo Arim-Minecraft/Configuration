@@ -27,7 +27,7 @@ class ExistingPlayer extends PartialPlayer {
 	}
 	
 	@Override
-	void begin(Omega manager) {
+	void begin(Omega omega) {
 		
 	}
 	
@@ -47,8 +47,8 @@ class ExistingPlayer extends PartialPlayer {
 	}
 	
 	@Override
-	void abort(Omega manager) {
-		player.removeIfOfflineUnlessSaving(manager);
+	void abort(Omega omega) {
+		player.removeIfOfflineUnlessSaving(omega);
 	}
 
 }

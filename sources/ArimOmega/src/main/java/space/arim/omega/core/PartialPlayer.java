@@ -20,7 +20,7 @@ package space.arim.omega.core;
 
 abstract class PartialPlayer {
 
-	abstract void begin(Omega manager);
+	abstract void begin(Omega omega);
 	
 	abstract void joinLoading();
 	
@@ -28,6 +28,6 @@ abstract class PartialPlayer {
 	
 	abstract OmegaPlayer finish();
 	
-	abstract void abort(Omega manager);
+	abstract void abort(Omega omega);
 	
 }
