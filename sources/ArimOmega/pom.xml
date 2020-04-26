@@ -101,7 +101,7 @@
 							<relocations>
 								<relocation>
 									<pattern>com.github.benmanes.caffeine</pattern>
-									<shadedPattern>space.arim.omega.shaded.caffeine</shadedPattern>
+									<shadedPattern>space.arim.shaded.com.github.benmanes.caffeine</shadedPattern>
 								</relocation>
 							</relocations>
 						</configuration>
