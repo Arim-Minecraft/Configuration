@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,10 +35,13 @@ import org.slf4j.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.api.concurrent.AsyncStartingModule;
 import space.arim.api.config.SimpleConfig;
+
+import net.milkbowl.vault.economy.Economy;
 
 public class Omega implements AsyncStartingModule {
 
@@ -73,18 +77,20 @@ public class Omega implements AsyncStartingModule {
 	public Omega(JavaPlugin plugin, Logger logger) {
 		this.plugin = plugin;
 		this.logger = logger;
-		
-		loader = new OmegaDataLoader(this);
-		Bukkit.getServer().getPluginManager().registerEvents(loader, plugin);
-		
+
 		syncExecutor = (cmd) -> Bukkit.getServer().getScheduler().runTask(plugin, cmd);
-		
+
 		SimpleConfig sqlCfg = new SimpleConfig(plugin.getDataFolder(), "sql.yml", "version") {};
 		sqlCfg.reload();
 		sql = new OmegaSql(logger, sqlCfg.getString("host"), sqlCfg.getInt("port"), sqlCfg.getString("database"),
 				sqlCfg.getString("url"), sqlCfg.getString("username"), sqlCfg.getString("password"),
 				sqlCfg.getInt("connections"));
 		sqlCfg.close();
+
+		loader = new OmegaDataLoader(this);
+		Bukkit.getServer().getPluginManager().registerEvents(loader, plugin);
+
+		Bukkit.getServicesManager().register(Economy.class, new OmegaSwiftConomy(this), plugin, ServicePriority.High);
 	}
 	
 	@Override
@@ -114,6 +120,15 @@ public class Omega implements AsyncStartingModule {
 	public void finishLoad() {
 		future.join();
 		future = null;
+	}
+	
+	/**
+	 * Gets all UUIDs for which there are omega players
+	 * 
+	 * @return a backed key set of uuids corresponding to loaded omega players
+	 */
+	Set<UUID> allUUIDs() {
+		return players.keySet();
 	}
 	
 	/**
