@@ -26,7 +26,7 @@ import space.arim.omega.core.Omega;
 
 public class OmegaPlugin extends JavaPlugin {
 
-	private static volatile Omega omega;
+	private Omega omega;
 	
 	@Override
 	public void onEnable() {
@@ -41,7 +41,7 @@ public class OmegaPlugin extends JavaPlugin {
 	}
 	
 	public static Omega get() {
-		return omega;
+		return JavaPlugin.getPlugin(OmegaPlugin.class).omega;
 	}
 	
 }
