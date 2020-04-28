@@ -125,7 +125,7 @@ public class MutablePrefs {
 	 * @return the updated state
 	 */
 	public boolean togglePreference(int index) {
-		assert 0 <= index && index <= 8;
+		assert 0 <= index && index <= 7;
 		
 		// using bytes creates a lot of unnecessary casting
 		int existing;
