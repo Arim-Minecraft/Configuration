@@ -19,6 +19,7 @@
 package space.arim.omega.core;
 
 import java.sql.SQLException;
+import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,10 +30,13 @@ import lombok.Getter;
 
 public class OmegaPlayer {
 
-	// Transient
-	
 	@Getter
-	private final transient UUID uuid;
+	private final UUID uuid;
+	@Getter
+	private volatile String name;
+	@Getter
+	private volatile byte[][] ips;
+
 	@Getter
 	private transient volatile Rank rank;
 	
@@ -52,11 +56,37 @@ public class OmegaPlayer {
 	
 	private final AtomicBoolean isCurrentlySaving = new AtomicBoolean(false);
 	
-	OmegaPlayer(UUID uuid, Rank rank, MutableStats stats, MutablePrefs prefs) {
+	/**
+	 * The maximum amount of IP addresses stored
+	 * 
+	 */
+	static final int MAX_STORED_IPS = 20;
+	
+	OmegaPlayer(UUID uuid, String name, byte[][] ips, Rank rank, MutableStats stats, MutablePrefs prefs) {
 		this.uuid = uuid;
+		this.name = name;
+		this.ips = ips;
 		this.rank = rank;
 		this.stats = stats;
 		this.prefs = prefs;
+	}
+	
+	/**
+	 * Sets the name of the OmegaPlayer
+	 * 
+	 * @param name the name
+	 */
+	void setName(String name) {
+		this.name = name;
+	}
+	
+	/**
+	 * Sets the ips of the OmegaPlayer
+	 * 
+	 * @param ips the ips
+	 */
+	void setIps(byte[][] ips) {
+		this.ips = ips;
 	}
 	
 	/**
@@ -80,6 +110,15 @@ public class OmegaPlayer {
 		player.setPlayerListName(rank.getTag() + " " + prefs.getNamecolour() + player.getName());
 	}
 	
+	static byte[][] decodeIps(String rawIps) {
+		String[] split = rawIps.split(",");
+		byte[][] result = new byte[split.length][];
+		for (int n = 0; n < split.length; n++) {
+			result[n] = Base64.getDecoder().decode(split[n]);
+		}
+		return result;
+	}
+	
 	/**
 	 * Saves and unloads the OmegaPlayer
 	 * 
@@ -87,34 +126,52 @@ public class OmegaPlayer {
 	 * @return a completable future representing the saving and unloading
 	 */
 	CompletableFuture<?> save(Omega omega) {
-		CompletableFuture<?>[] futures = new CompletableFuture<?>[2];
+		CompletableFuture<?>[] futures = new CompletableFuture<?>[3];
 		OmegaSql sql = omega.sql;
 
 		if (!isCurrentlySaving.compareAndSet(false, true)) {
 			return CompletableFuture.completedFuture(null);
 		}
-
-		// TODO still working on this
+		String name = this.name;
 		futures[0] = sql.executeAsync(() -> {
+			StringBuilder builder = new StringBuilder();
+			for (byte[] ip : ips) {
+				builder.append(',').append(Base64.getEncoder().encodeToString(ip));
+			}
+			String iplist = builder.substring(1);
+			int updated = Omega.currentTimeMinutes();
 			try {
-				long balance = stats.getBalance().get();
-				int kitpvp_kills = stats.getKitpvp_kills().get();
-				int kitpvp_deaths = stats.getKitpvp_deaths().get();
-				int combo_kills = stats.getCombo_kills().get();
-				int combo_deaths = stats.getCombo_deaths().get();
-				long monthly_reward = stats.getMonthly_reward().get();
-				sql.executionQuery("INSERT INTO `omega_stats` "
-						+ "(`uuid`, `balance`, `kitpvp_kills`, `kitpvp_deaths`, `combo_kills`, `combo_deaths`, `monthly_reward`) "
-						+ "VALUES (?, ?, ?, ?, ?, ?, ?) "
+				sql.executionQuery("INSERT INTO `omega_alts` "
+						+ "(`uuid`, `name`, `ips`, `updated`) "
+						+ "VALUES (?, ?, ?, ?) "
 						+ "ON DUPLICATE KEY UPDATE "
-						+ "`balance` = ?, `kitpvp_kills` = ?, `kitpvp_deaths` = ?, `combo_kills` = ?, `combo_deaths` = ?, `monthly_reward` = ?",
-						uuid.toString().replace("-", ""), balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward,
-						balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward);
+						+ "`name` = ?, `ips` = ?, `updated` = ?",
+						uuid.toString().replace("-", ""), name, iplist, updated,
+						name, iplist, updated);
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
 		});
 		futures[1] = sql.executeAsync(() -> {
+			long balance = stats.getBalance().get();
+			int kitpvp_kills = stats.getKitpvp_kills().get();
+			int kitpvp_deaths = stats.getKitpvp_deaths().get();
+			int combo_kills = stats.getCombo_kills().get();
+			int combo_deaths = stats.getCombo_deaths().get();
+			long monthly_reward = stats.getMonthly_reward().get();
+			try {
+				sql.executionQuery("INSERT INTO `omega_stats` "
+						+ "(`uuid`, `name`, `balance`, `kitpvp_kills`, `kitpvp_deaths`, `combo_kills`, `combo_deaths`, `monthly_reward`) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?) "
+						+ "ON DUPLICATE KEY UPDATE "
+						+ "`name` = ?, `balance` = ?, `kitpvp_kills` = ?, `kitpvp_deaths` = ?, `combo_kills` = ?, `combo_deaths` = ?, `monthly_reward` = ?",
+						uuid.toString().replace("-", ""), name, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward,
+						name, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward);
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+		});
+		futures[2] = sql.executeAsync(() -> {
 			try {
 				byte toggle_prefs = (byte) prefs.toggle_prefs.get();
 				String chat_colour = prefs.getChatcolour();
@@ -125,7 +182,7 @@ public class OmegaPlayer {
 						+ "VALUES (?, ?, ?, ?, ?) "
 						+ "ON DUPLICATE KEY UPDATE "
 						+ "`toggle_prefs` = ?, `chat_colour` = ?, `name_colour` = ?, `friended_ignored` = ?",
-						uuid, toggle_prefs, chat_colour, name_colour, friended_ignored,
+						uuid.toString().replace("-", ""), toggle_prefs, chat_colour, name_colour, friended_ignored,
 						toggle_prefs, chat_colour, name_colour, friended_ignored);
 			} catch (SQLException ex) {
 				ex.printStackTrace();
@@ -134,26 +191,16 @@ public class OmegaPlayer {
 
 		return CompletableFuture.allOf(futures).thenRunAsync(() -> {
 			isCurrentlySaving.set(false);
-			if (!isOnline(omega)) {
+			if (!omega.isOnline(uuid)) {
 				omega.remove(uuid);
 			}
 		});
 	}
 
-	/**
-	 * Checks whether the corresponding player is online in a thread safe manner
-	 * 
-	 * @param omega the omega manager
-	 * @return true if online, false otherwise
-	 */
-	public boolean isOnline(Omega omega) {
-		return omega.getTransientPlayer(uuid) != null;
-	}
-
 	void removeIfOfflineUnlessSaving(Omega omega) {
-		if (!isCurrentlySaving.get() && !isOnline(omega)) {
+		if (!isCurrentlySaving.get() && !omega.isOnline(uuid)) {
 			omega.remove(uuid);
 		}
-	}
+	}	
 
 }

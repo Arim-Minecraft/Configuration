@@ -47,14 +47,15 @@ public class MutablePrefs {
 	final AtomicInteger toggle_prefs;
 	
 	/**
-	 * The default preferences
-	 * autotree = false
-	 * autoitem = false
-	 * pms = true
-	 * sounds = true
-	 * bypasspms = false
-	 * sidebar = true
-	 * kit descriptions = true
+	 * The default preferences <br>
+	 * <br>
+	 * autotree = false <br>
+	 * autoitem = false <br>
+	 * pms = true <br>
+	 * sounds = true <br>
+	 * bypasspms = false <br>
+	 * sidebar = true <br>
+	 * kit descriptions = true <br>
 	 * world chat = true
 	 * 
 	 */
@@ -99,9 +100,9 @@ public class MutablePrefs {
 	static Map<UUID, Boolean> stringToMap(String raw) {
 		Map<UUID, Boolean> result = new HashMap<>();
 		if (!raw.equals("<empty>")) {
-			for (String node : raw.split(",")) {
-				String[] subNodes = node.split(":");
-				result.put(UUIDUtil.expandAndParse(subNodes[0]), subNodes[1].equals("1"));
+			for (String data : raw.split(",")) {
+				String[] subData = data.split(":");
+				result.put(UUIDUtil.expandAndParse(subData[0]), subData[1].equals("1"));
 			}
 		}
 		return result;

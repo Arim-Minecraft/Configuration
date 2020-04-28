@@ -19,11 +19,120 @@
 package space.arim.omega.core;
 
 import org.bukkit.GameMode;
+import org.bukkit.entity.Player;
+
+import lombok.Getter;
 
 public class TransientPlayer {
 
-	private GameMode vanishGm;
+	private final Omega omega;
+
+	private final Player player;
+	private final String name;
 	
+	@Getter
+	private volatile String world;
 	
+	private volatile GameMode vanishGm;
+	
+	TransientPlayer(Omega omega, Player player) {
+		this.omega = omega;
+		this.player = player;
+		this.name = player.getName();
+	}
+	
+	/**
+	 * Gets the player's name safely. <br>
+	 * <b>This is thread safe</b>.
+	 * 
+	 * @return the name of the player
+	 */
+	public String getName() {
+		return name;
+	}
+	
+	/**
+	 * Checks whether the player is vanished. <br>
+	 * <b>This is thread safe</b>.
+	 * 
+	 * @return whether the player is vanished
+	 */
+	public boolean isVanish() {
+		return vanishGm != null;
+	}
+	
+	/**
+	 * Hides vanished players from this one
+	 * 
+	 */
+	void hideVanishedFromPlayer() {
+		assert !isVanish();
+
+		omega.transients.forEach((otherId, other) -> {
+			if (other.isVanish()) {
+				player.hidePlayer(other.player);
+			}
+		});
+	}
+	
+	/**
+	 * Hides this player from unvanished players
+	 * 
+	 */
+	void hidePlayerFromUnvanished() {
+		assert isVanish();
+
+		omega.transients.forEach((otherId, other) -> {
+			if (!other.isVanish()) {
+				other.player.hidePlayer(player);
+			}
+		});
+	}
+	
+	/**
+	 * Updates the player's world
+	 * 
+	 */
+	void changeWorld() {
+		this.world = player.getWorld().getName();
+	}
+	
+	/**
+	 * Vanish the player
+	 * 
+	 */
+	public void vanish() {
+		if (vanishGm == null) {
+			vanishGm = player.getGameMode();
+			player.setGameMode(GameMode.SPECTATOR);
+
+			omega.transients.forEach((otherId, other) -> {
+				if (other.isVanish()) {
+					player.showPlayer(other.player); // show vanished players to this player
+				} else {
+					other.player.hidePlayer(player); // hide this player from unvanished players
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Unvanish the player
+	 * 
+	 */
+	public void unvanish() {
+		if (vanishGm != null) {
+			player.setGameMode(vanishGm);
+			vanishGm = null;
+
+			omega.transients.forEach((otherId, other) -> {
+				if (other.isVanish()) {
+					player.hidePlayer(other.player); // hide vanished players from this player
+				} else {
+					other.player.showPlayer(player); // show this player to unvanished players
+				}
+			});
+		}
+	}
 	
 }

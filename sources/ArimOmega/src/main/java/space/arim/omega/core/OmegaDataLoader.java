@@ -26,9 +26,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -50,22 +52,26 @@ public class OmegaDataLoader implements Listener{
 	
 	OmegaDataLoader(final Omega omega) {
 		this.omega = omega;
-		ServerStarter.afterAllowed = this::onAPPLE_start;
 		pending = Caffeine.newBuilder().expireAfterWrite(3, TimeUnit.MINUTES)
 				.<UUID, PartialPlayer>removalListener((uuid, partial, cause) -> partial.abort(omega)).build();
+		ServerStarter.afterAllowed = this::onAPPLE_start;
 	}
 	
 	private void onAPPLE_start(AsyncPlayerPreLoginEvent evt) {
 
+		UUID uuid = evt.getUniqueId();
+		String name = evt.getName();
+		byte[] address = evt.getAddress().getAddress();
+
 		PartialPlayer partial;
 
-		OmegaPlayer existing = omega.getPlayer(evt.getUniqueId());
+		OmegaPlayer existing = omega.getPlayer(uuid);
 		if (existing == null) {
-			partial = new PendingPlayer(evt.getUniqueId());
+			partial = new PendingPlayer(uuid, name, address);
 
 		} else {
 			// the previous player data hasn't finished saving and unloading yet
-			partial = new ExistingPlayer(existing);
+			partial = new ExistingPlayer(existing, name, address);
 		}
 		pending.put(evt.getUniqueId(), partial);
 
@@ -113,9 +119,25 @@ public class OmegaDataLoader implements Listener{
 		UUID uuid = player.getUniqueId();
 
 		omega.add(player, pending.getIfPresent(uuid)).applyDisplayNames(player);
-		omega.transients.put(uuid, new TransientPlayer());
+
+		TransientPlayer transientPlayer = new TransientPlayer(omega, player);
+		omega.transients.put(uuid, transientPlayer);
+		transientPlayer.hideVanishedFromPlayer();
 
 		pending.invalidate(uuid);
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	private void onTeleportVanishPatch(PlayerTeleportEvent evt) {
+		TransientPlayer player = omega.getTransientPlayer(evt.getPlayer());
+		if (player.isVanish()) {
+			player.hidePlayerFromUnvanished();
+		}
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	private void onWorldChange(PlayerChangedWorldEvent evt) {
+		omega.getTransientPlayer(evt.getPlayer()).changeWorld();
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)

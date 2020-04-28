@@ -5,3 +5,13 @@ author: A248
 description: ${project.description}
 depend: [ArimAPI, ServerStarter, Vault]
 load: STARTUP
+
+commands:
+  omegabaltop:
+    aliases: [baltop, richest]
+    usage: /baltop
+    description: See top balances
+  altcheck:
+    aliases: [alts]
+    usage: /altcheck <player>
+    description: Altcheck a player

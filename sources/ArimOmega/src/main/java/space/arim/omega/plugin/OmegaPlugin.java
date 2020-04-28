@@ -18,11 +18,22 @@
  */
 package space.arim.omega.plugin;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Map;
+import java.util.Set;
+
+import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.api.util.log.LoggerConverter;
 
+import space.arim.omega.core.AltcheckEntry;
+import space.arim.omega.core.BaltopEntry;
 import space.arim.omega.core.Omega;
+import space.arim.omega.util.BytesUtil;
 
 public class OmegaPlugin extends JavaPlugin {
 
@@ -40,6 +51,69 @@ public class OmegaPlugin extends JavaPlugin {
 		omega.close();
 	}
 	
+	@Override
+	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+		if (command.getName().equals("omegabaltop")) {
+			omega.getEconomy().getTopBalances().thenAccept((entries) -> {
+				int position = 0;
+				for (BaltopEntry entry : entries) {
+					sendMessage(sender, "&3" + ++position + "&7. " + entry.getName() + " &a$" + omega.getEconomy().displayBalance(entry.getBalance()));
+				}
+			});
+			return true;
+		} else if (command.getName().equals("altcheck")) {
+			if (sender.hasPermission("arim.helper")) {
+				if (args.length >= 1) {
+					omega.findPlayer(args[0]).thenAccept((info) -> {
+						if (info == null) {
+							sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c not found.");
+						} else {
+							omega.conductAltcheck(info).thenAcceptAsync((map) -> {
+								boolean found = false;
+								for (Map.Entry<Byte[], Set<AltcheckEntry>> entry : map.entrySet()) {
+									Set<AltcheckEntry> matches = entry.getValue();
+									if (matches != null) {
+										try {
+											String address = InetAddress.getByAddress(BytesUtil.unboxAll(entry.getKey())).getHostAddress();
+											StringBuilder builder = new StringBuilder();
+											for (AltcheckEntry match : matches) {
+												builder.append(',').append(match.getName());
+											}
+											sendMessage(sender, "&7IP: &e" + address + "&7. Players: " + builder.substring(0) + ".");
+											found = true;
+										} catch (UnknownHostException ex) {
+											ex.printStackTrace();
+											sendMessage(sender, "&6Arim>> &cInternal error, check server console.");
+										}
+									}
+								}
+								if (!found) {
+									sendMessage(sender, "&6Arim>> &cNo other players have matching IP address to &e" + args[0] + "&c.");
+								}
+							});
+						}
+					});
+				} else {
+					sendMessage(sender, "&6Arim>> &cUsage: /altcheck &e<player>&c.");
+				}
+			} else {
+				sendMessage(sender, "&6Arim>> &cSorry, you cannot use this.");
+			}
+			//omega.getTopBalances().thenAccept((msgs) -> msgs.forEach((msg) -> sender.sendMessage(msg)));
+			return true;
+		}
+		return false;
+	}
+	
+	private void sendMessage(CommandSender sender, String message) {
+		sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+	}
+	
+	/**
+	 * Gets the instance
+	 * 
+	 * @return the instance
+	 */
 	public static Omega get() {
 		return JavaPlugin.getPlugin(OmegaPlugin.class).omega;
 	}

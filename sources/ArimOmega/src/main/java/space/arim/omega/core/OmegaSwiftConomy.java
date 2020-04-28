@@ -18,15 +18,26 @@
  */
 package space.arim.omega.core;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
+
+import space.arim.api.uuid.UUIDUtil;
 
 import space.arim.swiftconomy.core.AbstractSwiftConomy;
 
 public class OmegaSwiftConomy extends AbstractSwiftConomy {
 
+	private static final int BALTOP_SIZE = 5;
+	
 	private final Omega omega;
 	
 	protected OmegaSwiftConomy(Omega omega) {
@@ -36,13 +47,55 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 
 	@Override
 	public Collection<UUID> getAllUUIDs() {
-		return new HashSet<>(omega.allUUIDs());
+		Set<UUID> result = new HashSet<>();
+		omega.forEach((uuid, player) -> result.add(uuid));
+		return result;
 	}
 
 	@Override
 	protected AtomicLong getRawBalance(UUID uuid) {
 		OmegaPlayer player = omega.getPlayer(uuid);
 		return (player != null) ? player.getStats().getBalance() : null;
+	}
+	
+	private static void potentiallyAddToList(List<BaltopEntry> entries, UUID uuid, String name, long balance) {
+		if (entries.size() < BALTOP_SIZE || balance > entries.get(BALTOP_SIZE - 1).getBalance()) {
+			BaltopEntry entry = new BaltopEntry(uuid, name, balance);
+			int search = Collections.binarySearch(entries, entry);
+			entries.add(-(search + 1), entry);
+		}
+	}
+	
+	public CompletableFuture<List<BaltopEntry>> getTopBalances() {
+		OmegaSql sql = omega.sql;
+		return sql.selectAsync(() -> {
+			List<BaltopEntry> entries = new ArrayList<>();
+
+			omega.forEach((uuid, player) ->
+				potentiallyAddToList(entries, uuid, player.getName(), player.getStats().getBalance().get()));
+
+			try (ResultSet rs = sql.selectionQuery("SELECT `uuid,name,balance` FROM `omega_stats` ORDER BY `balance` DESC LIMIT " + BALTOP_SIZE)) {
+				while (rs.next()) {
+
+					UUID uuid = UUIDUtil.expandAndParse(rs.getString("uuid"));
+
+					// check if we already accounted for this player earlier
+					boolean found = false;
+					for (BaltopEntry entry : entries) {
+						if (entry.getUuid().equals(uuid)) {
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						potentiallyAddToList(entries, uuid, rs.getString("name"), rs.getLong("balance"));
+					}
+				}
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return entries;
+		});
 	}
 
 }

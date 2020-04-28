@@ -20,54 +20,87 @@ package space.arim.omega.core;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import space.arim.omega.util.BytesUtil;
+
+import lombok.RequiredArgsConstructor;
+
+/**
+ * A player whose data is being loaded from the SQL backend.
+ * 
+ * @author A248
+ *
+ */
+@RequiredArgsConstructor
 class PendingPlayer extends PartialPlayer {
 
 	private final UUID uuid;
+	private final String name;
+	private final byte[] address;
 	
+	private volatile CompletableFuture<Byte[][]> futureIps;
 	private volatile CompletableFuture<MutableStats> futureStats;
 	private volatile CompletableFuture<MutablePrefs> futurePrefs;
 	private volatile Rank rank;
 	
-	PendingPlayer(UUID uuid) {
-		this.uuid = uuid;
-	}
-	
 	@Override
 	void begin(Omega omega) {
 		OmegaSql sql = omega.sql;
-		futureStats = sql.supplyAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_stats` WHERE `uuid` = ?", uuid)) {
-				if (!rs.next()) {
-					// default statistics, starting balance of $3000, monthly reward immediately available
-					return new MutableStats(3000L, 0, 0, 0, 0,
-							(int) (System.currentTimeMillis() / Omega.MILLIS_IN_MINUTE - Omega.MINUTES_IN_MONTH));
+		futureIps = sql.selectAsync(() -> {
+			ArrayList<Byte[]> ips = new ArrayList<>();
+			try (ResultSet rs = sql.selectionQuery("SELECT `ips` FROM `omega_alts` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
+				if (rs.next()) {
+					for (String previous : rs.getString("ips").split(",")) {
+						byte[] previousIp = Base64.getDecoder().decode(previous);
+						if (!Arrays.equals(address, previousIp)) {
+							ips.add(BytesUtil.boxAll(previousIp));
+						}
+					}
 				}
-				return new MutableStats(rs.getLong("balance"), rs.getInt("kitpvp_kills"), rs.getInt("kitpvp_deaths"),
-						rs.getInt("combo_kills"), rs.getInt("combo_deaths"), rs.getInt("monthly_reward"));
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
-			return null;
+
+			ips.add(BytesUtil.boxAll(address));
+			// We only store up to 20 IPs per player
+			if (ips.size() > OmegaPlayer.MAX_STORED_IPS) {
+				ips.remove(0); // remove oldest address
+			}
+			return ips.toArray(new Byte[][] {});
 		});
-		futurePrefs = sql.supplyAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_prefs` WHERE `uuid` = ?", uuid)) {
-				if (!rs.next()) {
-					return new MutablePrefs(MutablePrefs.DEFAULT_TOGGLE_PREFS, "&f", "&b", MutablePrefs.stringToMap("<empty>"));
+		futureStats = sql.selectAsync(() -> {
+			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_stats` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
+				if (rs.next()) {
+					return new MutableStats(rs.getLong("balance"), rs.getInt("kitpvp_kills"), rs.getInt("kitpvp_deaths"),
+							rs.getInt("combo_kills"), rs.getInt("combo_deaths"), rs.getInt("monthly_reward"));
 				}
-				return new MutablePrefs(rs.getByte("toggle_prefs"), rs.getString("chat_colour"), rs.getString("name_colour"),
-						MutablePrefs.stringToMap(rs.getString("friended_ignored")));
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
-			return null;
+			// default statistics, starting balance of $3000, monthly reward immediately available
+			return new MutableStats(3000L, 0, 0, 0, 0, Omega.currentTimeMinutes() - Omega.MINUTES_IN_MONTH);
+		});
+		futurePrefs = sql.selectAsync(() -> {
+			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_prefs` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
+				if (rs.next()) {
+					return new MutablePrefs(rs.getByte("toggle_prefs"), rs.getString("chat_colour"), rs.getString("name_colour"),
+							MutablePrefs.stringToMap(rs.getString("friended_ignored")));
+				}
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return new MutablePrefs(MutablePrefs.DEFAULT_TOGGLE_PREFS, "&f", "&b", MutablePrefs.stringToMap("<empty>"));
 		});
 	}
 	
 	@Override
 	void joinLoading() {
+		futureIps.join();
 		futureStats.join();
 		futurePrefs.join();
 	}
@@ -79,11 +112,12 @@ class PendingPlayer extends PartialPlayer {
 	
 	@Override
 	OmegaPlayer finish() {
-		return new OmegaPlayer(uuid, rank, futureStats.join(), futurePrefs.join());
+		return new OmegaPlayer(uuid, name, BytesUtil.unboxAll2D(futureIps.join()), rank, futureStats.join(), futurePrefs.join());
 	}
 	
 	@Override
 	void abort(Omega omega) {
+		futureIps = null;
 		futureStats = null;
 		futurePrefs = null;
 	}
