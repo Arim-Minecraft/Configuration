@@ -109,6 +109,17 @@ public class MutablePrefs {
 	}
 	
 	/**
+	 * Gets a current preference according to its index. <br>
+	 * See {@link #togglePreference(int)} for indexes.
+	 * 
+	 * @param index the index
+	 * @return the current preference
+	 */
+	public boolean getPreference(int index) {
+		return booleanArrayFromByte(toggle_prefs.get())[index];
+	}
+	
+	/**
 	 * Toggles an on/off preference according to its index and returns the updated result. <br>
 	 * <br>
 	 * 0 {@literal -} AutoTree, true indicates on <br>
