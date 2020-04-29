@@ -195,7 +195,7 @@ public class OmegaPlayer {
 				int kitpvp_deaths = stats.getKitpvp_deaths().get();
 				int combo_kills = stats.getCombo_kills().get();
 				int combo_deaths = stats.getCombo_deaths().get();
-				long monthly_reward = stats.getMonthly_reward().get();
+				int monthly_reward = stats.getMonthly_reward().get();
 				try {
 					sql.executionQuery("INSERT INTO `omega_stats` "
 							+ "(`uuid`, `name`, `balance`, `kitpvp_kills`, `kitpvp_deaths`, `combo_kills`, `combo_deaths`, `monthly_reward`) "
