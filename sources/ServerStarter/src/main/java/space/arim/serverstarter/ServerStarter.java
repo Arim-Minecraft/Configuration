@@ -41,7 +41,8 @@ public class ServerStarter extends JavaPlugin implements Listener {
 	@EventHandler(priority = EventPriority.LOWEST)
 	private void onConnect(AsyncPlayerPreLoginEvent evt) {
 		if (!open) {
-			getLogger().info("Blocked connection from " + evt.getName() + " (" + evt.getAddress().getHostAddress() + ") since the server is still starting.");
+			getLogger().info("Blocked connection from {Name=" + evt.getName() + ",UUID=" + evt.getUniqueId()
+					+ ",Address=" + evt.getAddress().getHostAddress() + "}");
 			evt.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, message);
 		} else if (afterAllowed != null) {
 			afterAllowed.accept(evt);
