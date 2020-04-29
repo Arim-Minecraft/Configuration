@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -250,7 +251,7 @@ public class Omega implements AsyncStartingModule {
 		return (int) System.currentTimeMillis() / MILLIS_IN_MINUTE;
 	}
 	
-	private void potentiallyAddToSetArray(byte[][] checkFor, Set<AltcheckEntry>[] preresult, UUID uuid, String name, byte[][] addresses) {
+	private static void potentiallyAddToSetArray(byte[][] checkFor, Set<AltcheckEntry>[] preresult, UUID uuid, String name, byte[][] addresses) {
 		for (int m = 0; m < addresses.length; m++) {
 			AltcheckEntry cachedEntry = null;
 			for (int n = 0; n < checkFor.length; n++) {
@@ -315,11 +316,20 @@ public class Omega implements AsyncStartingModule {
 
 			players.forEach((uuidOther, player) -> {
 				if (!uuid.equals(uuidOther)) {
-					potentiallyAddToSetArray(checkFor, preresult, player.getUuid(), player.getName(), player.getIps());
+					potentiallyAddToSetArray(checkFor, preresult, uuidOther, player.getName(), player.getIps());
 				}
 			});
 
-			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_alts` WHERE `uuid` != ?", uuid.toString().replace("-", ""))) {
+			StringBuilder builder = new StringBuilder();
+			for (byte[] ip : checkFor) {
+				String encodedIp = Base64.getEncoder().encodeToString(ip);
+				assert !encodedIp.contains("%");
+
+				builder.append(" OR `ips` LIKE '%").append(encodedIp).append("%'");
+			}
+			String ipScanPredicate = builder.substring(" OR ".length());
+			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_alts` WHERE `uuid` != ? AND (" + ipScanPredicate + ")",
+					uuid.toString().replace("-", ""))) {
 				while (rs.next()) {
 
 					potentiallyAddToSetArray(checkFor, preresult, UUIDUtil.expandAndParse(rs.getString("uuid")),
