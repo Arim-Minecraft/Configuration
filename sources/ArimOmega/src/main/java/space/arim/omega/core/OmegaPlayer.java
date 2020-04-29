@@ -20,6 +20,7 @@ package space.arim.omega.core;
 
 import java.sql.SQLException;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -126,14 +127,14 @@ public class OmegaPlayer {
 	 * @return a completable future representing the saving and unloading
 	 */
 	CompletableFuture<?> save(Omega omega) {
-		CompletableFuture<?>[] futures = new CompletableFuture<?>[3];
+		HashSet<CompletableFuture<?>> futures = new HashSet<>();
 		OmegaSql sql = omega.sql;
 
 		if (!isCurrentlySaving.compareAndSet(false, true)) {
 			return CompletableFuture.completedFuture(null);
 		}
 		String name = this.name;
-		futures[0] = sql.executeAsync(() -> {
+		futures.add(sql.executeAsync(() -> {
 			StringBuilder builder = new StringBuilder();
 			for (byte[] ip : ips) {
 				builder.append(',').append(Base64.getEncoder().encodeToString(ip));
@@ -151,45 +152,49 @@ public class OmegaPlayer {
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
-		});
-		futures[1] = sql.executeAsync(() -> {
-			long balance = stats.getBalance().get();
-			int kitpvp_kills = stats.getKitpvp_kills().get();
-			int kitpvp_deaths = stats.getKitpvp_deaths().get();
-			int combo_kills = stats.getCombo_kills().get();
-			int combo_deaths = stats.getCombo_deaths().get();
-			long monthly_reward = stats.getMonthly_reward().get();
-			try {
-				sql.executionQuery("INSERT INTO `omega_stats` "
-						+ "(`uuid`, `name`, `balance`, `kitpvp_kills`, `kitpvp_deaths`, `combo_kills`, `combo_deaths`, `monthly_reward`) "
-						+ "VALUES (?, ?, ?, ?, ?, ?, ?) "
-						+ "ON DUPLICATE KEY UPDATE "
-						+ "`name` = ?, `balance` = ?, `kitpvp_kills` = ?, `kitpvp_deaths` = ?, `combo_kills` = ?, `combo_deaths` = ?, `monthly_reward` = ?",
-						uuid.toString().replace("-", ""), name, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward,
-						name, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward);
-			} catch (SQLException ex) {
-				ex.printStackTrace();
-			}
-		});
-		futures[2] = sql.executeAsync(() -> {
-			try {
-				byte toggle_prefs = (byte) prefs.toggle_prefs.get();
-				String chat_colour = prefs.getChatcolour();
-				String name_colour = prefs.getNamecolour();
-				String friended_ignored = MutablePrefs.mapToString(prefs.getFriended_ignored());
-				sql.executionQuery("INSERT INTO `omega_prefs` "
-						+ "(`uuid`, `toggle_prefs`, `chat_colour`, `name_colour`, `friended_ignored`) "
-						+ "VALUES (?, ?, ?, ?, ?) "
-						+ "ON DUPLICATE KEY UPDATE "
-						+ "`toggle_prefs` = ?, `chat_colour` = ?, `name_colour` = ?, `friended_ignored` = ?",
-						uuid.toString().replace("-", ""), toggle_prefs, chat_colour, name_colour, friended_ignored,
-						toggle_prefs, chat_colour, name_colour, friended_ignored);
-			} catch (SQLException ex) {
-				ex.printStackTrace();
-			}
-		});
+		}));
+		if (!stats.isCurrentlyDefault()) {
+			futures.add(sql.executeAsync(() -> {
+				long balance = stats.getBalance().get();
+				int kitpvp_kills = stats.getKitpvp_kills().get();
+				int kitpvp_deaths = stats.getKitpvp_deaths().get();
+				int combo_kills = stats.getCombo_kills().get();
+				int combo_deaths = stats.getCombo_deaths().get();
+				long monthly_reward = stats.getMonthly_reward().get();
+				try {
+					sql.executionQuery("INSERT INTO `omega_stats` "
+							+ "(`uuid`, `name`, `balance`, `kitpvp_kills`, `kitpvp_deaths`, `combo_kills`, `combo_deaths`, `monthly_reward`) "
+							+ "VALUES (?, ?, ?, ?, ?, ?, ?) "
+							+ "ON DUPLICATE KEY UPDATE "
+							+ "`name` = ?, `balance` = ?, `kitpvp_kills` = ?, `kitpvp_deaths` = ?, `combo_kills` = ?, `combo_deaths` = ?, `monthly_reward` = ?",
+							uuid.toString().replace("-", ""), name, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward,
+							name, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward);
+				} catch (SQLException ex) {
+					ex.printStackTrace();
+				}
+			}));
+		}
+		if (!prefs.isCurrentlyDefault()) {
+			futures.add(sql.executeAsync(() -> {
+				try {
+					byte toggle_prefs = (byte) prefs.toggle_prefs.get();
+					String chat_colour = prefs.getChatcolour();
+					String name_colour = prefs.getNamecolour();
+					String friended_ignored = prefs.getFriended_ignored().toString();
+					sql.executionQuery("INSERT INTO `omega_prefs` "
+							+ "(`uuid`, `toggle_prefs`, `chat_colour`, `name_colour`, `friended_ignored`) "
+							+ "VALUES (?, ?, ?, ?, ?) "
+							+ "ON DUPLICATE KEY UPDATE "
+							+ "`toggle_prefs` = ?, `chat_colour` = ?, `name_colour` = ?, `friended_ignored` = ?",
+							uuid.toString().replace("-", ""), toggle_prefs, chat_colour, name_colour, friended_ignored,
+							toggle_prefs, chat_colour, name_colour, friended_ignored);
+				} catch (SQLException ex) {
+					ex.printStackTrace();
+				}
+			}));
+		}
 
-		return CompletableFuture.allOf(futures).thenRunAsync(() -> {
+		return CompletableFuture.allOf(futures.toArray(new CompletableFuture<?>[] {})).thenRunAsync(() -> {
 			isCurrentlySaving.set(false);
 			if (!omega.isOnline(uuid)) {
 				omega.remove(uuid);

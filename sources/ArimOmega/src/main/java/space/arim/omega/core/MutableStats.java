@@ -47,4 +47,28 @@ public class MutableStats {
 		this.monthly_reward = new AtomicInteger(monthly_reward);
 	}
 	
+	/**
+	 * Default statistics, starting balance of $3000, monthly reward immediately available. <br>
+	 * Note that the balance is 3000 * 10^4 because of how SwiftConomy balances work internally.
+	 * 
+	 */
+	// Values here MUST equal those in #isCurrentlyDefault
+	static MutableStats makeDefaultValues() {
+		return new MutableStats(3000_0000L, 0, 0, 0, 0, 0);
+	}
+	
+	/**
+	 * Whether the player's stats are currently equal to the default values
+	 * 
+	 * @return true if equal, false otherwise
+	 */
+	boolean isCurrentlyDefault() {
+		return balance.get() == 3000_0000L &&
+				kitpvp_kills.get() == 0 &&
+				kitpvp_deaths.get() == 0 &&
+				combo_kills.get() == 0 &&
+				combo_deaths.get() == 0 &&
+				monthly_reward.get() == 0;
+	}
+	
 }

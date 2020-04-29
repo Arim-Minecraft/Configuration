@@ -74,7 +74,7 @@ public class Omega implements AsyncStartingModule {
 	 * This is used with the monthly reward of the player, which is also in minutes.
 	 * 
 	 */
-	static final int MINUTES_IN_MONTH = 1440 * 30;
+	private static final int MINUTES_IN_MONTH = 1440 * 30;
 	
 	/**
 	 * Milliseconds within a minute, used to divide into System.currentTimeMillis

@@ -82,19 +82,18 @@ class PendingPlayer extends PartialPlayer {
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
-			// default statistics, starting balance of $3000, monthly reward immediately available
-			return new MutableStats(3000L, 0, 0, 0, 0, Omega.currentTimeMinutes() - Omega.MINUTES_IN_MONTH);
+			return MutableStats.makeDefaultValues();
 		});
 		futurePrefs = sql.selectAsync(() -> {
 			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_prefs` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
 				if (rs.next()) {
 					return new MutablePrefs(rs.getByte("toggle_prefs"), rs.getString("chat_colour"), rs.getString("name_colour"),
-							MutablePrefs.stringToMap(rs.getString("friended_ignored")));
+							FriendedIgnored.fromString(rs.getString("friended_ignored")));
 				}
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
-			return new MutablePrefs(MutablePrefs.DEFAULT_TOGGLE_PREFS, "&f", "&b", MutablePrefs.stringToMap("<empty>"));
+			return MutablePrefs.makeDefaultValues();
 		});
 	}
 	

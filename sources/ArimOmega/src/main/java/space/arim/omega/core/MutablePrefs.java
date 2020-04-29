@@ -18,13 +18,8 @@
  */
 package space.arim.omega.core;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
-
-import space.arim.api.uuid.UUIDUtil;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -46,9 +41,18 @@ public class MutablePrefs {
 	 */
 	final AtomicInteger toggle_prefs;
 	
+	@Getter
+	@Setter
+	private volatile String chatcolour;
+	@Getter
+	@Setter
+	private volatile String namecolour;
+	
+	@Getter
+	private final FriendedIgnored friended_ignored;
+	
 	/**
-	 * The default preferences <br>
-	 * <br>
+	 * Default toggle preferences: <br>
 	 * autotree = false <br>
 	 * autoitem = false <br>
 	 * pms = true <br>
@@ -59,18 +63,9 @@ public class MutablePrefs {
 	 * world chat = true
 	 * 
 	 */
-	static final byte DEFAULT_TOGGLE_PREFS = (byte) byteFromBooleanArray(new boolean[] {false, false, true, true, false, true, true, true});
+	private static final byte DEFAULT_TOGGLE_PREFS = (byte) byteFromBooleanArray(new boolean[] {false, false, true, true, false, true, true, true});
 	
-	@Getter
-	@Setter
-	private volatile String chatcolour;
-	@Getter
-	@Setter
-	private volatile String namecolour;
-	
-	private final Map<UUID, Boolean> friended_ignored;
-	
-	MutablePrefs(byte toggle_prefs, String chat_colour, String namecolour, Map<UUID, Boolean> friended_ignored) {
+	MutablePrefs(byte toggle_prefs, String chat_colour, String namecolour, FriendedIgnored friended_ignored) {
 		this.toggle_prefs = new AtomicInteger(toggle_prefs);
 		this.chatcolour = chat_colour;
 		this.namecolour = namecolour;
@@ -78,34 +73,29 @@ public class MutablePrefs {
 	}
 	
 	/**
-	 * Converts a map of friended/ignored players to a string.
+	 * The default preferences <br>
+	 * <br>
+	 * Default toggle preferences: {@link #DEFAULT_TOGGLE_PREFS} <br>
+	 * Default chat colour: {@literal &}f <br>
+	 * Default name colour: {@literal &}b <br>
+	 * Ignored / friended: none
 	 * 
-	 * @param map the map
-	 * @return the string
 	 */
-	static String mapToString(Map<UUID, Boolean> map) {
-		StringBuilder builder = new StringBuilder();
-		map.forEach((uuid, value) -> {
-			builder.append(',').append(uuid.toString().replace("-", "")).append(':').append((value) ? '1' : '0');
-		});
-		return (builder.length() == 0) ? "<empty>" : builder.substring(1);
+	// Values here MUST equal those in #isCurrentlyDefault
+	static MutablePrefs makeDefaultValues() {
+		return new MutablePrefs(DEFAULT_TOGGLE_PREFS, "&f", "&b", new FriendedIgnored());
 	}
 	
 	/**
-	 * Converts a raw string of friended/ignored players to a map.
+	 * Whether the player's prefs are currently equal to the default values
 	 * 
-	 * @param raw the string
-	 * @return the map
+	 * @return true if equal, false otherwise
 	 */
-	static Map<UUID, Boolean> stringToMap(String raw) {
-		Map<UUID, Boolean> result = new HashMap<>();
-		if (!raw.equals("<empty>")) {
-			for (String data : raw.split(",")) {
-				String[] subData = data.split(":");
-				result.put(UUIDUtil.expandAndParse(subData[0]), subData[1].equals("1"));
-			}
-		}
-		return result;
+	boolean isCurrentlyDefault() {
+		return toggle_prefs.get() == DEFAULT_TOGGLE_PREFS &&
+				chatcolour.equals("&f") &&
+				namecolour.equals("&b") &&
+				friended_ignored.isEmpty();
 	}
 	
 	/**
@@ -150,22 +140,6 @@ public class MutablePrefs {
 			update = byteFromBooleanArray(change);
 		} while (!compareAndSet(toggle_prefs, existing, update));
 		return result;
-	}
-	
-	/**
-	 * Map of friended and ignored players. <br>
-	 * <b>The map is not synchronised! You must synchronise on the map!</b> <br>
-	 * <br>
-	 * A value of <code>true</code> indicates a friend,
-	 * while <code>false</code> an ignored user. <br>
-	 * <br>
-	 * Furthermore, users of this map should limit the amount of friends to 50
-	 * and the amount of ignored also to 50. This should be done within the
-	 * synchronised block in which the map is operated on.
-	 * 
-	 */
-	public Map<UUID, Boolean> getFriended_ignored() {
-		return friended_ignored;
 	}
 	
 	/*
