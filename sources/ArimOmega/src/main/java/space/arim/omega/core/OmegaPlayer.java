@@ -38,8 +38,12 @@ public class OmegaPlayer {
 	@Getter
 	private volatile byte[][] ips;
 
+	// Transient
+	
 	@Getter
 	private transient volatile Rank rank;
+	
+	private transient volatile TransientPlayer transientInfo;
 	
 	// From SQL backend
 	
@@ -97,6 +101,32 @@ public class OmegaPlayer {
 	 */
 	void setRank(Rank rank) {
 		this.rank = rank;
+	}
+	
+	void nullifyTransientInfo() {
+		transientInfo = null;
+	}
+	
+	/**
+	 * Gets transient player info. <br>
+	 * Transient info is not necessarily thread safe.
+	 * 
+	 * @return transient player info
+	 */
+	TransientPlayer getTransientInfo() {
+		return transientInfo;
+	}
+	
+	/**
+	 * Called in the PlayerJoinEvent.
+	 * 
+	 * @param player the bukkit player
+	 * @param transientInfo the transient player info
+	 */
+	void onPlayerJoin(Player player, TransientPlayer transientInfo) {
+		this.transientInfo = transientInfo;
+		applyDisplayNames(player);
+		transientInfo.hideVanishedFromPlayer();
 	}
 	
 	/**

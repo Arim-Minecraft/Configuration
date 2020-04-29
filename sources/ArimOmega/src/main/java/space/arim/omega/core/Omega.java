@@ -34,6 +34,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 
@@ -55,8 +56,6 @@ public class Omega implements AsyncStartingModule {
 
 	private final JavaPlugin plugin;
 	private final ConcurrentHashMap<UUID, OmegaPlayer> players = new ConcurrentHashMap<>();
-	
-	final ConcurrentHashMap<UUID, TransientPlayer> transients = new ConcurrentHashMap<>();
 	
 	final Logger logger;
 	final OmegaSql sql;
@@ -134,9 +133,19 @@ public class Omega implements AsyncStartingModule {
 	/**
 	 * Run something for each loaded player
 	 * 
+	 * @param action what to do
 	 */
 	void forEach(BiConsumer<UUID, OmegaPlayer> action) {
 		players.forEach(action);
+	}
+	
+	/**
+	 * Run something for each transient player info
+	 * 
+	 * @param action what to do
+	 */
+	void forEachTransient(Consumer<TransientPlayer> action) {
+		players.forEach((uuid, player) -> action.accept(player.getTransientInfo()));
 	}
 	
 	/**
@@ -167,7 +176,8 @@ public class Omega implements AsyncStartingModule {
 	 * @return the transient player or <code>null</code> if offline
 	 */
 	TransientPlayer getTransientPlayer(UUID uuid) {
-		return transients.get(uuid);
+		OmegaPlayer player = getPlayer(uuid);
+		return (player != null) ? player.getTransientInfo() : null;
 	}
 	
 	/**

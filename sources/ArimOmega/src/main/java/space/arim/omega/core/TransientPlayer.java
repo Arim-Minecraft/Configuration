@@ -68,7 +68,7 @@ public class TransientPlayer {
 	void hideVanishedFromPlayer() {
 		assert !isVanish();
 
-		omega.transients.forEach((otherId, other) -> {
+		omega.forEachTransient((other) -> {
 			if (other.isVanish()) {
 				player.hidePlayer(other.player);
 			}
@@ -82,7 +82,7 @@ public class TransientPlayer {
 	void hidePlayerFromUnvanished() {
 		assert isVanish();
 
-		omega.transients.forEach((otherId, other) -> {
+		omega.forEachTransient((other) -> {
 			if (!other.isVanish()) {
 				other.player.hidePlayer(player);
 			}
@@ -106,7 +106,7 @@ public class TransientPlayer {
 			vanishGm = player.getGameMode();
 			player.setGameMode(GameMode.SPECTATOR);
 
-			omega.transients.forEach((otherId, other) -> {
+			omega.forEachTransient((other) -> {
 				if (other.isVanish()) {
 					player.showPlayer(other.player); // show vanished players to this player
 				} else {
@@ -125,7 +125,7 @@ public class TransientPlayer {
 			player.setGameMode(vanishGm);
 			vanishGm = null;
 
-			omega.transients.forEach((otherId, other) -> {
+			omega.forEachTransient((other) -> {
 				if (other.isVanish()) {
 					player.hidePlayer(other.player); // hide vanished players from this player
 				} else {
