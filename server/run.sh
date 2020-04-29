@@ -18,10 +18,6 @@ JVM_FLAGS="-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX
 
 MC_NAME='test'
 
-ME=`whoami`
-
-USERNAME=$ME
-
 DEBUG_ENABLE=true
 
 debug() {
