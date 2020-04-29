@@ -231,14 +231,14 @@ public class OmegaPlayer {
 
 		return CompletableFuture.allOf(futures.toArray(new CompletableFuture<?>[] {})).thenRunAsync(() -> {
 			isCurrentlySaving.set(false);
-			if (!omega.isOnline(uuid)) {
+			if (transientInfo == null) {
 				omega.remove(uuid);
 			}
 		});
 	}
 
 	void removeIfOfflineUnlessSaving(Omega omega) {
-		if (!isCurrentlySaving.get() && !omega.isOnline(uuid)) {
+		if (!isCurrentlySaving.get() && transientInfo == null) {
 			omega.remove(uuid);
 		}
 	}	
