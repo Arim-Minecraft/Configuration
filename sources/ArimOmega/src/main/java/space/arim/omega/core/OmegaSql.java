@@ -73,7 +73,7 @@ public class OmegaSql extends PooledLoggingSql {
 		return executeAsync(() -> {
 			try {
 				executionQueries(
-						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_alts`("
+						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_identify`("
 						+ "`uuid` VARCHAR(32) PRIMARY KEY,"
 						+ "`name` VARCHAR(16) NOT NULL,"
 						+ "`ips` VARCHAR(499) NOT NULL,"

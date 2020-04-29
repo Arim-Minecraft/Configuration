@@ -53,7 +53,7 @@ class PendingPlayer extends PartialPlayer {
 		OmegaSql sql = omega.sql;
 		futureIps = sql.selectAsync(() -> {
 			ArrayList<Byte[]> ips = new ArrayList<>();
-			try (ResultSet rs = sql.selectionQuery("SELECT `ips` FROM `omega_alts` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
+			try (ResultSet rs = sql.selectionQuery("SELECT `ips` FROM `omega_identify` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
 				if (rs.next()) {
 					for (String previous : rs.getString("ips").split(",")) {
 						byte[] previousIp = Base64.getDecoder().decode(previous);

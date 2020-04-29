@@ -142,7 +142,7 @@ public class OmegaPlayer {
 			String iplist = builder.substring(1);
 			int updated = Omega.currentTimeMinutes();
 			try {
-				sql.executionQuery("INSERT INTO `omega_alts` "
+				sql.executionQuery("INSERT INTO `omega_identify` "
 						+ "(`uuid`, `name`, `ips`, `updated`) "
 						+ "VALUES (?, ?, ?, ?) "
 						+ "ON DUPLICATE KEY UPDATE "

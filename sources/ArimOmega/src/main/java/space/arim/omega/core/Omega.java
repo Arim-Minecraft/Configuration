@@ -283,7 +283,7 @@ public class Omega implements AsyncStartingModule {
 		}
 		// MySQL is not case sensitive https://stackoverflow.com/a/61484046/6548501
 		return sql.selectAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT `uuid,ips` FROM `omega_alts` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
+			try (ResultSet rs = sql.selectionQuery("SELECT `uuid,ips` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
 				if (rs.next()) {
 
 					return new IdentifyingPlayerInfo(UUIDUtil.expandAndParse(rs.getString("uuid")),
