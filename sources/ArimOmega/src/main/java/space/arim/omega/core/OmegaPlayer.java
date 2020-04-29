@@ -103,6 +103,11 @@ public class OmegaPlayer {
 		this.rank = rank;
 	}
 	
+	/**
+	 * Detaches transient player info. <br>
+	 * This is called in PlayerQuitEvent.
+	 * 
+	 */
 	void nullifyTransientInfo() {
 		transientInfo = null;
 	}
