@@ -27,7 +27,9 @@ debug() {
 }
 
 is_running() {
-  if [ echo $(ps -aux | grep Drun.sh.name=$MC_NAME | grep -v grep) != "" ] ; then
+  ps -aux | grep Drun.sh.name=$MC_NAME | grep -v grep &> /dev/null
+#  if [ echo $(ps -aux | grep Drun.sh.name=$MC_NAME | grep -v grep) != "" ] ; then
+  if [ $? ] ; then
     return 1
   else
     return 0
@@ -35,7 +37,7 @@ is_running() {
 }
 
 backup_in_process() {
-  find -iname "backup_in_process.txt"
+  find -iname backup_in_process.txt
   if [ $? ] ; then
     return 1
   else
@@ -72,8 +74,17 @@ mc_backup() {
     exit 1
   fi
   echo "" > backup_in_process.txt
+  #PID=`ps -aux | grep Drun.sh.name=test | cut -f1 -d'.' | head -n 1 | tr -d -c 0-9`
+  PID=`ps -ax | grep Drun.sh.name=test | cut -f1 -d' ' | head -n 1`
+  echo "pid = $PID"
+  kill $PID
   bash -c "$1"
   rm backup_in_process.txt
+  if [ $? ] ; then
+    debug "Success"
+  else
+    debug "Failure?"
+  fi
 }
 
 debug "--- DEBUG START ---"
