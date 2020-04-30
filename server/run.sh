@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/bash -x
 
 #
 # Server JAR file
 # e.g. paperclip.jar
 #
-JARFILE="idkspigot.jar"
+JARFILE="paperclip.jar"
 
 #
 # Server RAM
@@ -21,15 +21,13 @@ MC_NAME='test'
 DEBUG_ENABLE=true
 
 debug() {
-  if [ DEBUG_ENABLE ] ; then
+  if [ $DEBUG_ENABLE ] ; then
     echo "Debug: $1"
   fi
 }
 
 is_running() {
-  debug "Checking"
-  debug "Drun.sh.name=$MC_NAME"
-  if [ ps -aux | grep Drun.sh.name=$MC_NAME | grep -v grep ] ; then
+  if [ echo $(ps -aux | grep Drun.sh.name=$MC_NAME | grep -v grep) != "" ] ; then
     return 1
   else
     return 0
@@ -37,7 +35,8 @@ is_running() {
 }
 
 backup_in_process() {
-  if [ -f "backup_in_process.txt" ] ; then
+  find -iname "backup_in_process.txt"
+  if [ $? ] ; then
     return 1
   else
     return 0
@@ -56,12 +55,13 @@ mc_start() {
   #
   # run_as_user "screen -ls | grep $get_screen_name | cut -f1 -d'.' | head -n 1 | tr -d -c 0-9 > $pidfile"
   while true; do
-    while [ backup_in_process ]; do
-      "Awaiting backup completion..."
+    while backup_in_process ; do
+      echo "Awaiting backup completion..."
       sleep 50
     done
     java -Xms$JVM_RAM -Xmx$JVM_RAM $JVM_FLAGS -Drun.sh.name=$MC_NAME -jar $JARFILE
-    echo "20 seconds until restart."
+    echo ""
+    echo "Restarting in 20 seconds..."
     sleep 20
   done
 }
@@ -77,13 +77,16 @@ mc_backup() {
 }
 
 debug "--- DEBUG START ---"
-debug "NAME=$NAME"
-debug "ME=$ME"
 debug "JARFILE=$JARFILE"
 if is_running ; then
   debug "Running"
 else
   debug "Not running"
+fi
+if backup_in_process ; then
+  debug "Backing up"
+else
+  debug "Not backing up"
 fi
 debug "startupcmd=java -Xms$JVM_RAM -Xmx$JVM_RAM $JVM_FLAGS -Drun.sh.name=$MC_NAME -jar $JARFILE"
 debug "--- DEBUG END ---"
