@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 #
 #
@@ -66,7 +66,7 @@ JVM_FLAGS="-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX
 #
 #
 
-DEBUG_ENABLE=true
+DEBUG_ENABLE=false
 
 debug() {
   if [ $DEBUG_ENABLE ] ; then
