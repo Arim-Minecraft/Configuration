@@ -54,7 +54,7 @@ import net.milkbowl.vault.economy.Economy;
 
 public class Omega implements AsyncStartingModule {
 
-	private final JavaPlugin plugin;
+	private final File dataFolder;
 	private final ConcurrentHashMap<UUID, OmegaPlayer> players = new ConcurrentHashMap<>();
 	
 	final Logger logger;
@@ -84,7 +84,7 @@ public class Omega implements AsyncStartingModule {
 	private static final int MILLIS_IN_MINUTE = 60000;
 	
 	public Omega(JavaPlugin plugin, Logger logger) {
-		this.plugin = plugin;
+		dataFolder = plugin.getDataFolder();
 		this.logger = logger;
 
 		SimpleConfig sqlCfg = new SimpleConfig(plugin.getDataFolder(), "sql.yml", "version") {};
@@ -105,7 +105,7 @@ public class Omega implements AsyncStartingModule {
 	public void startLoad() {
 		future = CompletableFuture.allOf(sql.makeTablesIfNotExist(), CompletableFuture.runAsync(() -> {
 			HashMap<Integer, Rank> ranks = new HashMap<>();
-			try (Scanner scanner = new Scanner(new File(plugin.getDataFolder(), "ranks.txt"), "UTF-8")) {
+			try (Scanner scanner = new Scanner(new File(dataFolder, "ranks.txt"), "UTF-8")) {
 				ArrayList<String> lines = new ArrayList<>(4);
 				while (scanner.hasNextLine()) {
 					lines.add(scanner.nextLine());
