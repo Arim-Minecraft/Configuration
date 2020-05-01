@@ -66,12 +66,8 @@ JVM_FLAGS="-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX
 #
 #
 
-DEBUG_ENABLE=false
-
 debug() {
-  if [ $DEBUG_ENABLE ] ; then
-    echo "Debug: $1"
-  fi
+  #echo "Debug: $1"
 }
 
 is_script_running() {
