@@ -335,7 +335,7 @@ public class Omega implements AsyncStartingModule {
 				String encodedIp = Base64.getEncoder().encodeToString(ip);
 				assert !encodedIp.contains("%");
 
-				builder.append(" OR `ips` LIKE '%").append(encodedIp).append("%'");
+				builder.append(" OR `ips` LIKE BINARY '%").append(encodedIp).append("%'");
 			}
 			String ipScanPredicate = builder.substring(" OR ".length());
 			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_alts` WHERE `uuid` != ? AND (" + ipScanPredicate + ")",
