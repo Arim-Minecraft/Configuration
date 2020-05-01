@@ -14,11 +14,9 @@
 # 3. Create a new screen session (this script is designed to work with screens)
 # 4. Fill in the screen name from the screen you just made.
 # 5. Run './run.sh start' from inside the screen sesssion.
-# 6. When you need a backup, run './run.sh backup "<command>"'. If the server is
-# running, this script will safely shutdown the server, conduct the backup
-# by running the backup command, and restart the server.
-# 7. If the server stops for another reason besides making a backup,
-# this script will automatically restart it within 20 seconds.
+# 6. When you need a backup, run './run.sh backup <command>'. If the server is
+# running, this script will safely shutdown, backup, and restart the server.
+# 7. If the server stops for another reason, it will automatically restart.
 #
 
 #
@@ -28,14 +26,8 @@
 MC_NAME='test'
 
 #
-# Command to stop the server
-# Most servers use /stop
-#
-MC_STOP_CMD='stop'
-
-#
 # Screen name
-#
+# Must be unique
 #
 SCREEN_NAME='Test'
 
@@ -67,13 +59,14 @@ JVM_FLAGS="-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX
 #
 
 debug() {
-  #echo "Debug: $1"
+  echo "Debug: $1"
 }
 
 is_script_running() {
   PID=`cat run.sh-script_pid`
-  RESULT=`ps -aux | grep $PID | grep -v grep | cut -f1 -d' ' | head -n 1`
-  if [ "$RESULT" != "" ] ; then
+  #RESULT=`ps -aux | grep $PID | grep -v grep | cut -f1 -d' ' | head -n 1`
+  #if [ "$RESULT" != "" ] ; then
+  if ps -p $PID > /dev/null ; then
     return 0
   else
     return 1
@@ -110,7 +103,7 @@ mc_start() {
   while true; do
     while backup_in_process ; do
       echo "Awaiting backup completion..."
-      sleep 5
+      sleep 10
     done
     java -Xms$JVM_RAM -Xmx$JVM_RAM $JVM_FLAGS -Drun.sh.name=$MC_NAME -jar $JARFILE
     echo ""
@@ -137,7 +130,7 @@ mc_backup() {
     mc_stop
   fi
   while is_server_running ; do
-    debug "Waiting for server to stop"
+    echo "Waiting for server to stop"
     sleep 5
   done
   $@
@@ -148,22 +141,6 @@ mc_backup() {
     debug "Failure?"
   fi
 }
-
-if is_script_running ; then
-  debug "Script Running"
-else
-  debug "Script not running"
-fi
-if is_server_running ; then
-  debug "Server Running"
-else
-  debug "Server not running"
-fi
-if backup_in_process ; then
-  debug "Backing up"
-else
-  debug "Not backing up"
-fi
 
 if [ $1 == 'start' ] ; then
   mc_start
