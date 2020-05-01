@@ -41,7 +41,8 @@ public class OmegaPlugin extends JavaPlugin {
 	
 	@Override
 	public void onEnable() {
-		omega = new Omega(this, LoggerConverter.get().convert(getLogger()));
+		omega = new Omega(getDataFolder(), LoggerConverter.get().convert(getLogger()));
+		omega.registerWith(this);
 		omega.startLoad();
 		getServer().getScheduler().runTaskLater(this, omega::finishLoad, 1L);
 	}
@@ -67,31 +68,32 @@ public class OmegaPlugin extends JavaPlugin {
 					omega.findPlayer(args[0]).thenAccept((info) -> {
 						if (info == null) {
 							sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c not found.");
-						} else {
-							omega.conductAltcheck(info).thenAcceptAsync((map) -> {
-								boolean found = false;
-								for (Map.Entry<Byte[], Set<AltcheckEntry>> entry : map.entrySet()) {
-									Set<AltcheckEntry> matches = entry.getValue();
-									if (matches != null) {
-										try {
-											String address = InetAddress.getByAddress(BytesUtil.unboxAll(entry.getKey())).getHostAddress();
-											StringBuilder builder = new StringBuilder();
-											for (AltcheckEntry match : matches) {
-												builder.append(',').append(match.getName());
-											}
-											sendMessage(sender, "&7IP: &e" + address + "&7. Players: " + builder.substring(0) + ".");
-											found = true;
-										} catch (UnknownHostException ex) {
-											ex.printStackTrace();
-											sendMessage(sender, "&6Arim>> &cInternal error, check server console.");
-										}
-									}
-								}
-								if (!found) {
-									sendMessage(sender, "&6Arim>> &cNo other players have matching IP address to &e" + args[0] + "&c.");
-								}
-							});
+							return;
 						}
+						omega.conductAltcheck(info).thenAcceptAsync((map) -> {
+							boolean found = false;
+							for (Map.Entry<Byte[], Set<AltcheckEntry>> entry : map.entrySet()) {
+								Set<AltcheckEntry> matches = entry.getValue();
+								if (matches == null) {
+									continue;
+								}
+								try {
+									String address = InetAddress.getByAddress(BytesUtil.unboxAll(entry.getKey())).getHostAddress();
+									StringBuilder builder = new StringBuilder();
+									for (AltcheckEntry match : matches) {
+										builder.append(',').append(match.getName());
+									}
+									sendMessage(sender, "&7IP: &e" + address + "&7. Players: " + builder.substring(0) + ".");
+									found = true;
+								} catch (UnknownHostException ex) {
+									ex.printStackTrace();
+									sendMessage(sender, "&6Arim>> &cInternal error, check server console.");
+								}
+							}
+							if (!found) {
+								sendMessage(sender, "&6Arim>> &cNo other players have matching IP address to &e" + args[0] + "&c.");
+							}
+						});
 					});
 				} else {
 					sendMessage(sender, "&6Arim>> &cUsage: /altcheck &e<player>&c.");
@@ -99,7 +101,6 @@ public class OmegaPlugin extends JavaPlugin {
 			} else {
 				sendMessage(sender, "&6Arim>> &cSorry, you cannot use this.");
 			}
-			//omega.getTopBalances().thenAccept((msgs) -> msgs.forEach((msg) -> sender.sendMessage(msg)));
 			return true;
 		}
 		return false;

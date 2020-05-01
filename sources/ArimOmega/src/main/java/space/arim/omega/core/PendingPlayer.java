@@ -116,6 +116,9 @@ class PendingPlayer extends PartialPlayer {
 	
 	@Override
 	void abort(Omega omega) {
+		futureIps.cancel(false);
+		futureStats.cancel(false);
+		futurePrefs.cancel(false);
 		futureIps = null;
 		futureStats = null;
 		futurePrefs = null;

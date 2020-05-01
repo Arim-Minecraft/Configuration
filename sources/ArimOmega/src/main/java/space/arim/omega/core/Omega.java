@@ -38,7 +38,6 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -83,11 +82,11 @@ public class Omega implements AsyncStartingModule {
 	 */
 	private static final int MILLIS_IN_MINUTE = 60000;
 	
-	public Omega(JavaPlugin plugin, Logger logger) {
-		dataFolder = plugin.getDataFolder();
+	public Omega(File dataFolder, Logger logger) {
+		this.dataFolder = dataFolder;
 		this.logger = logger;
 
-		SimpleConfig sqlCfg = new SimpleConfig(plugin.getDataFolder(), "sql.yml", "version") {};
+		SimpleConfig sqlCfg = new SimpleConfig(dataFolder, "sql.yml", "version") {};
 		sqlCfg.reload();
 		sql = new OmegaSql(logger, sqlCfg.getString("host"), sqlCfg.getInt("port"), sqlCfg.getString("database"),
 				sqlCfg.getString("url"), sqlCfg.getString("username"), sqlCfg.getString("password"),
@@ -95,12 +94,16 @@ public class Omega implements AsyncStartingModule {
 		sqlCfg.close();
 
 		loader = new OmegaDataLoader(this);
-		Bukkit.getServer().getPluginManager().registerEvents(loader, plugin);
 
 		economy = new OmegaSwiftConomy(this);
-		Bukkit.getServicesManager().register(Economy.class, economy, plugin, ServicePriority.High);
 	}
-	
+
+	public void registerWith(JavaPlugin plugin) {
+		org.bukkit.Server server = plugin.getServer();
+		server.getPluginManager().registerEvents(loader, plugin);
+		server.getServicesManager().register(Economy.class, economy, plugin, ServicePriority.High);
+	}
+
 	@Override
 	public void startLoad() {
 		future = CompletableFuture.allOf(sql.makeTablesIfNotExist(), CompletableFuture.runAsync(() -> {
@@ -333,7 +336,7 @@ public class Omega implements AsyncStartingModule {
 			StringBuilder builder = new StringBuilder();
 			for (byte[] ip : checkFor) {
 				String encodedIp = Base64.getEncoder().encodeToString(ip);
-				assert !encodedIp.contains("%");
+				assert encodedIp.indexOf('%') == -1;
 
 				builder.append(" OR `ips` LIKE BINARY '%").append(encodedIp).append("%'");
 			}
