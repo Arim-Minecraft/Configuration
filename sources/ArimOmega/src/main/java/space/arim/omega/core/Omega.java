@@ -227,6 +227,7 @@ public class Omega implements AsyncStartingModule {
 	
 	/**
 	 * Reloads the player's rank based on permissions. <br>
+	 * <b>Must be called SYNC </b> <br>
 	 * Will also update any displays in chat or tablist.
 	 * 
 	 * @param player the player
