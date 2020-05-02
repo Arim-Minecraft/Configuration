@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -62,7 +63,7 @@ public class Omega implements AsyncStartingModule {
 	@Getter
 	private final OmegaSwiftConomy economy;
 	
-	private Map<Integer, Rank> ranks;
+	private List<Rank> ranks;
 	
 	private CompletableFuture<?> future;
 	
@@ -107,16 +108,13 @@ public class Omega implements AsyncStartingModule {
 	@Override
 	public void startLoad() {
 		future = CompletableFuture.allOf(sql.makeTablesIfNotExist(), CompletableFuture.runAsync(() -> {
-			HashMap<Integer, Rank> ranks = new HashMap<>();
+			List<Rank> ranks = new ArrayList<>();
 			try (Scanner scanner = new Scanner(new File(dataFolder, "ranks.txt"), "UTF-8")) {
 				ArrayList<String> lines = new ArrayList<>(4);
 				while (scanner.hasNextLine()) {
 					lines.add(scanner.nextLine());
 					if (lines.size() == 4) {
-						String id = lines.get(0).toLowerCase();
-						if (ranks.put(ranks.size(), new Rank(id, lines.get(1), lines.get(2), lines.get(3))) != null) {
-							logger.warn("Duplicate rank " + id);
-						}
+						ranks.add(new Rank(lines.get(0).toLowerCase(), lines.get(1), lines.get(2), lines.get(3)));
 						lines.clear();
 					}
 				}
@@ -414,8 +412,7 @@ public class Omega implements AsyncStartingModule {
 	}
 
 	private Rank findRank(Player player) {
-		for (int n = 0; n < ranks.size(); n++) {
-			Rank rank = ranks.get(n);
+		for (Rank rank : ranks) {
 			if (player.hasPermission(rank.getPermission())) {
 				return rank;
 			}
