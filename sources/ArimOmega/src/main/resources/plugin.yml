@@ -7,6 +7,10 @@ depend: [ArimAPI, ServerStarter, Vault]
 load: STARTUP
 
 commands:
+  pay:
+    aliases: [/transact]
+    usage: /pay
+    description: Pay another player
   bal:
     aliases: [balance]
     usage: /bal
