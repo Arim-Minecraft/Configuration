@@ -422,4 +422,10 @@ public class Omega implements AsyncStartingModule {
 		return Rank.NONE;
 	}
 	
+	@Override
+	public void close() {
+		loader.close();
+		sql.close();
+	}
+	
 }

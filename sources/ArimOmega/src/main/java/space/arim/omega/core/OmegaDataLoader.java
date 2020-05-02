@@ -35,6 +35,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+import space.arim.universal.util.AutoClosable;
+
 import space.arim.serverstarter.ServerStarter;
 
 /**
@@ -44,7 +46,7 @@ import space.arim.serverstarter.ServerStarter;
  * @author A248
  *
  */
-public class OmegaDataLoader implements Listener{
+public class OmegaDataLoader implements Listener, AutoClosable {
 
 	private final Omega omega;
 	
@@ -145,6 +147,11 @@ public class OmegaDataLoader implements Listener{
 		// TODO Using priority MONITOR until we can transition away from Skript
 		// at which point we'll move this to LOWEST to start saving ASAP
 		player.save(omega);
+	}
+	
+	@Override
+	public void close() {
+		pending.invalidateAll();
 	}
 
 }

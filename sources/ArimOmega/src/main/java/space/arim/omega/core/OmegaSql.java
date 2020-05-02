@@ -20,8 +20,9 @@ package space.arim.omega.core;
 
 import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -29,15 +30,17 @@ import org.slf4j.Logger;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import space.arim.universal.util.AutoClosable;
+
 import space.arim.api.sql.ExecutableQuery;
 import space.arim.api.sql.PooledLoggingSql;
 
-public class OmegaSql extends PooledLoggingSql {
+public class OmegaSql extends PooledLoggingSql implements AutoClosable {
 
 	private final Logger logger;
 	private final HikariDataSource dataSource;
 	
-	private final Executor asyncExecutor;
+	private final ExecutorService asyncExecutor;
 	
 	OmegaSql(Logger logger, String host, int port, String database, String url, String username, String password, int connections) {
 		this.logger = logger;
@@ -115,6 +118,17 @@ public class OmegaSql extends PooledLoggingSql {
 	@Override
 	protected void log(String message) {
 		logger.info(message);
+	}
+	
+	@Override
+	public void close() {
+		asyncExecutor.shutdown();
+		try {
+			asyncExecutor.awaitTermination(15L, TimeUnit.SECONDS);
+		} catch (InterruptedException ex) {
+			ex.printStackTrace();
+		}
+		dataSource.close();
 	}
 	
 }
