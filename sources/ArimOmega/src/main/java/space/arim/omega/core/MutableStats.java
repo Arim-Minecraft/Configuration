@@ -54,7 +54,7 @@ public class MutableStats {
 	 */
 	// Values here MUST equal those in #isCurrentlyDefault
 	static MutableStats makeDefaultValues() {
-		return new MutableStats(3000_0000L, 0, 0, 0, 0, 0);
+		return new MutableStats(OmegaSwiftConomy.STARTING_BALANCE, 0, 0, 0, 0, 0);
 	}
 	
 	/**
@@ -63,7 +63,7 @@ public class MutableStats {
 	 * @return true if equal, false otherwise
 	 */
 	boolean isCurrentlyDefault() {
-		return balance.get() == 3000_0000L &&
+		return balance.get() == OmegaSwiftConomy.STARTING_BALANCE &&
 				kitpvp_kills.get() == 0 &&
 				kitpvp_deaths.get() == 0 &&
 				combo_kills.get() == 0 &&

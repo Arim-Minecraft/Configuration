@@ -7,6 +7,10 @@ depend: [ArimAPI, ServerStarter, Vault]
 load: STARTUP
 
 commands:
+  bal:
+    aliases: [balance]
+    usage: /bal
+    description: See player balance
   omegabaltop:
     aliases: [baltop, richest]
     usage: /baltop

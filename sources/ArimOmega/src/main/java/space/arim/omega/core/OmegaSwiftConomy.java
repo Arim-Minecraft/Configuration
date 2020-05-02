@@ -36,6 +36,12 @@ import space.arim.swiftconomy.core.AbstractSwiftConomy;
 
 public class OmegaSwiftConomy extends AbstractSwiftConomy {
 
+	/**
+	 * The default / starting balance
+	 * 
+	 */
+	static final long STARTING_BALANCE = 3000_0000L;
+	
 	private static final int BALTOP_SIZE = 5;
 	
 	private final Omega omega;
@@ -64,6 +70,35 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 			int search = Collections.binarySearch(entries, entry);
 			entries.add(-(search + 1), entry);
 		}
+	}
+	
+	/**
+	 * Finds the balance of a player by name. <br>
+	 * If the player is offline, this will lookup the UUID and balance. <br>
+	 * <br>
+	 * The completable future's result includes the player UUID, the correctly capitalised
+	 * player name, and the balance of the player.
+	 * 
+	 * @param name the player name
+	 * @return a completable future whose result is <code>null</code> if not found
+	 */
+	public CompletableFuture<BaltopEntry> findOfflineBalance(String name) {
+		OmegaPlayer player = omega.getPlayerByName(name);
+		if (player != null) {
+			return CompletableFuture.completedFuture(new BaltopEntry(player.getUuid(), player.getName(), player.getStats().getBalance().get()));
+		}
+		OmegaSql sql = omega.sql;
+		return omega.findPlayerInfo(name).thenCompose((info) -> (info == null) ? null : sql.selectAsync(() -> {
+			UUID uuid = info.getUuid();
+			try (ResultSet rs = sql.selectionQuery("SELECT `balance` FROM `omega_stats` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
+
+				return new BaltopEntry(uuid, info.getName(), (rs.next()) ? rs.getLong("balance") : STARTING_BALANCE);
+
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return null;
+		}));
 	}
 	
 	public CompletableFuture<List<BaltopEntry>> getTopBalances() {

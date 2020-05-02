@@ -28,6 +28,7 @@ import lombok.Getter;
 public class IdentifyingPlayerInfo {
 
 	private final UUID uuid;
+	private final String name;
 	private final byte[][] addresses;
 	
 }

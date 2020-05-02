@@ -26,6 +26,7 @@ import java.util.Set;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.api.util.log.LoggerConverter;
@@ -33,6 +34,7 @@ import space.arim.api.util.log.LoggerConverter;
 import space.arim.omega.core.AltcheckEntry;
 import space.arim.omega.core.BaltopEntry;
 import space.arim.omega.core.Omega;
+import space.arim.omega.core.OmegaSwiftConomy;
 import space.arim.omega.util.BytesUtil;
 
 public class OmegaPlugin extends JavaPlugin {
@@ -54,7 +56,22 @@ public class OmegaPlugin extends JavaPlugin {
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		if (command.getName().equals("omegabaltop")) {
+		if (command.getName().equals("bal")) {
+			OmegaSwiftConomy economy = omega.getEconomy();
+			if (args.length >= 1) {
+				economy.findOfflineBalance(args[0]).thenAccept((baltopEntry) -> {
+					if (baltopEntry == null) {
+						sender.sendMessage("&6Arim>> &cPlayer &e" + args[0] + "&c has never been online.");
+					} else {
+						sender.sendMessage("&7Balance for &e" + baltopEntry.getName() + "&7 is &a$" + economy.displayBalance(baltopEntry.getBalance()));
+					}
+				});
+			} else if (sender instanceof Player) {
+				sender.sendMessage("&7Your balance is &a$" + economy.displayBalance(omega.getPlayer((Player) sender).getStats().getBalance().get()));
+			} else {
+				sender.sendMessage("&cSpecify a player.");
+			}
+		} else if (command.getName().equals("omegabaltop")) {
 			omega.getEconomy().getTopBalances().thenAccept((entries) -> {
 				int position = 0;
 				for (BaltopEntry entry : entries) {
@@ -65,7 +82,7 @@ public class OmegaPlugin extends JavaPlugin {
 		} else if (command.getName().equals("altcheck")) {
 			if (sender.hasPermission("arim.helper")) {
 				if (args.length >= 1) {
-					omega.findPlayer(args[0]).thenAccept((info) -> {
+					omega.findPlayerInfoWithIPs(args[0]).thenAccept((info) -> {
 						if (info == null) {
 							sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c not found.");
 							return;

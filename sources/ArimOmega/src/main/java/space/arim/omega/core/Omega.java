@@ -283,25 +283,68 @@ public class Omega implements AsyncStartingModule {
 	}
 	
 	/**
-	 * Finds a player by name, returns UUID and IP addresses. <br>
-	 * The input name is case insensitive.
+	 * Gets an online player by name
+	 * 
+	 * @param name the player name
+	 * @return the player or <code>null</code> if not found
+	 */
+	OmegaPlayer getPlayerByName(String name) {
+		for (OmegaPlayer player : players.values()) {
+			if (player.getName().equalsIgnoreCase(name)) {
+				return player;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Finds a player by name, returns UUID and name. <br>
+	 * The input name is case insensitive, while the output name is correctly capitalised. <br>
+	 * <br>
+	 * Note that the result of the completable future will have null IPs, use
+	 * {@link #findPlayerInfoWithIPs(String)} if IPs are desired.
 	 * 
 	 * @param name the player name
 	 * @return a completable future whose result is <code>null</code> if not found
 	 */
-	public CompletableFuture<IdentifyingPlayerInfo> findPlayer(String name) {
-		for (OmegaPlayer player : players.values()) {
-			if (player.getName().equalsIgnoreCase(name)) {
-				return CompletableFuture.completedFuture(new IdentifyingPlayerInfo(player.getUuid(), player.getIps()));
-			}
+	public CompletableFuture<IdentifyingPlayerInfo> findPlayerInfo(String name) {
+		OmegaPlayer player = getPlayerByName(name);
+		if (player != null) {
+			return CompletableFuture.completedFuture(new IdentifyingPlayerInfo(player.getUuid(), player.getName(), null));
 		}
 		// MySQL is not case sensitive https://stackoverflow.com/a/61484046/6548501
 		return sql.selectAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT `uuid,ips` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
+			try (ResultSet rs = sql.selectionQuery("SELECT `uuid,name` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
 				if (rs.next()) {
 
 					return new IdentifyingPlayerInfo(UUIDUtil.expandAndParse(rs.getString("uuid")),
-							OmegaPlayer.decodeIps(rs.getString("ips")));
+							rs.getString("name"), null);
+				}
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return null;
+		});
+	}
+	
+	/**
+	 * Finds a player by name, returns UUID, name, and IP addresses. <br>
+	 * The input name is case insensitive, while the output name is correctly capitalised.
+	 * 
+	 * @param name the player name
+	 * @return a completable future whose result is <code>null</code> if not found
+	 */
+	public CompletableFuture<IdentifyingPlayerInfo> findPlayerInfoWithIPs(String name) {
+		OmegaPlayer player = getPlayerByName(name);
+		if (player != null) {
+			return CompletableFuture.completedFuture(new IdentifyingPlayerInfo(player.getUuid(), player.getName(), player.getIps()));
+		}
+		return sql.selectAsync(() -> {
+			try (ResultSet rs = sql.selectionQuery("SELECT `uuid,name,ips` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
+				if (rs.next()) {
+
+					return new IdentifyingPlayerInfo(UUIDUtil.expandAndParse(rs.getString("uuid")),
+							rs.getString("name"), OmegaPlayer.decodeIps(rs.getString("ips")));
 				}
 			} catch (SQLException ex) {
 				ex.printStackTrace();
