@@ -71,6 +71,7 @@ public class OmegaPlugin extends JavaPlugin {
 			} else {
 				sender.sendMessage("&cSpecify a player.");
 			}
+			return true;
 		} else if (command.getName().equals("omegabaltop")) {
 			omega.getEconomy().getTopBalances().thenAccept((entries) -> {
 				int position = 0;
