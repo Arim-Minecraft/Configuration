@@ -1,0 +1,18 @@
+name: ${project.name}
+main: ${project.groupId}.misc.Misc
+version: ${project.version}
+author: A248
+description: A lot of things for Arim. Uses ArimLib.
+depend: [ArimLib, ArimAPI]
+softdepend: [LuckPerms]
+
+commands:
+  altcheck:
+    description: Altcheck players
+    usage: /altcheck <player>
+  namehistory:
+    description: Check name history
+    usage: /namehistory <player>
+  bossbars:
+    description: Change hub bossbars
+    usage: /bossbars <line> <text>
