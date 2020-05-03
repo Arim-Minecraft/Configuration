@@ -108,7 +108,6 @@ public class BytesUtil {
 	 * The resulting array has thus the same size as the source.
 	 * 
 	 * @param source the source array
-	 * @param elementToAdd the element to add
 	 * @return the resulting array with elements shifted
 	 */
 	public static byte[][] popFirstThenPadOne2D(byte[][] source) {
