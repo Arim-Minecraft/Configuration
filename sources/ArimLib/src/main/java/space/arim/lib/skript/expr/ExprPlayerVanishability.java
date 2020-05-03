@@ -23,7 +23,8 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 
-import space.arim.lib.ArimLibPlugin;
+import space.arim.omega.core.TransientPlayer;
+import space.arim.omega.plugin.OmegaPlugin;
 
 import ch.njol.skript.classes.Changer;
 import ch.njol.skript.classes.Changer.ChangeMode;
@@ -61,7 +62,7 @@ public class ExprPlayerVanishability extends SimpleExpression<Boolean> {
 	@Override
 	@Nullable
 	protected Boolean[] get(Event e) {
-		return new Boolean[] {ArimLibPlugin.inst().vanisher().isVanish(player.getSingle(e))};
+		return new Boolean[] {OmegaPlugin.get().getTransientPlayer(player.getSingle(e)).isVanish()};
 	}
 
 	@Override
@@ -72,10 +73,11 @@ public class ExprPlayerVanishability extends SimpleExpression<Boolean> {
 	@Override
 	public void change(Event e, @Nullable Object[] delta, Changer.ChangeMode mode) {
 		if (mode == ChangeMode.SET) {
+			TransientPlayer player = OmegaPlugin.get().getTransientPlayer(this.player.getSingle(e));
 			if ((boolean) delta[0]) {
-				ArimLibPlugin.inst().vanisher().vanish(player.getSingle(e));
+				player.vanish();
 			} else {
-				ArimLibPlugin.inst().vanisher().unvanish(player.getSingle(e));
+				player.unvanish();
 			}
 		}
 	}

@@ -52,7 +52,6 @@ import space.arim.lib.sound.PacketSoundManager;
 import space.arim.lib.status.StatusManager;
 import space.arim.lib.tablist.TablistManager;
 import space.arim.lib.util.NMS;
-import space.arim.lib.vanish.VanishManager;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.milkbowl.vault.economy.Economy;
@@ -75,7 +74,6 @@ public class ArimLib implements AutoClosable {
 	private final PowerupManager powerups;
 	private final TablistManager tablists;
 	private final StatusManager statuses;
-	private final VanishManager vanisher;
 	private final PacketSoundManager packetSounds;
 	
 	public ArimLib(JavaPlugin center, String datafolder, Economy economy) {
@@ -99,7 +97,6 @@ public class ArimLib implements AutoClosable {
 
 		this.tablists = new TablistManager(this);
 		this.statuses = new StatusManager(this);
-		this.vanisher = new VanishManager(this);
 		this.packetSounds = new PacketSoundManager(this);
 		this.dateformatter = ThreadLocal.withInitial(() -> new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"));
 		this.decimalformatter = ThreadLocal.withInitial(() -> {
@@ -154,10 +151,6 @@ public class ArimLib implements AutoClosable {
 	
 	public StatusManager statuses() {
 		return statuses;
-	}
-
-	public VanishManager vanisher() {
-		return vanisher;
 	}
 	
 	public PacketSoundManager packetSounds() {

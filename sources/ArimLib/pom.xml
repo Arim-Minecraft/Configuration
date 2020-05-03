@@ -12,6 +12,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<arimapi.version>0.8.1-SNAPSHOT</arimapi.version>
+		<arimomega.version>0.3.0-SNAPSHOT</arimomega.version>
 		<protocollib.version>4.5.0</protocollib.version>
 		<vault.version>1.7</vault.version>
 		<placeholderapi.version>2.10.4</placeholderapi.version>
@@ -77,6 +78,11 @@
 			<groupId>space.arim</groupId>
 			<artifactId>arimapi-core</artifactId>
 			<version>${arimapi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.server</groupId>
+			<artifactId>omega</artifactId>
+			<version>${arimomega.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.github.paperspigot</groupId>
