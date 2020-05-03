@@ -1,0 +1,6 @@
+name: ${project.name}
+main: space.arim.lib.ArimLibPlugin
+version: ${project.version}
+author: A248
+description: Internal API and core specifically designed used for a variety of server features.
+softdepend: [ArimAPI, ArimOmega, HolographicDisplays, ProtocolLib, Skript]
