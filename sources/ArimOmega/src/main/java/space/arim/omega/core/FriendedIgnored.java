@@ -30,8 +30,10 @@ import space.arim.api.uuid.UUIDUtil;
 /**
  * Data describing friended and ignored players. <br>
  * <br>
- * Limits the amount of friends to 50
- * and the amount of ignored also to 50.
+ * Limits the amount of friends to 50 and the amount of ignored also to 50. <br>
+ * This is implemented internally as an atomic reference to a map of
+ * uuids to booleans, where <code>true</code> value indicates
+ * a friend and a <code>false</code> value an ignored player.
  * 
  * @author A248
  *

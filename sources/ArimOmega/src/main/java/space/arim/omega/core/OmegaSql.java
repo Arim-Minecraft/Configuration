@@ -83,7 +83,8 @@ public class OmegaSql extends PooledLoggingSql implements AutoClosable {
 						+ "`updated` INT NOT NULL)"),
 						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_stats` ("
 						+ "`uuid` VARCHAR(32) PRIMARY KEY,"
-						+ "`name` VARCHAR(16) NOT NULL"
+						+ "`name` VARCHAR(16) NOT NULL,"
+						+ "`level` INT NOT NULL,"
 						+ "`balance` BIGINT NOT NULL,"
 						+ "`kitpvp_kills` INT NOT NULL,"
 						+ "`kitpvp_deaths` INT NOT NULL,"

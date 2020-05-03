@@ -190,20 +190,21 @@ public class OmegaPlayer {
 		}));
 		if (!stats.isCurrentlyDefault()) {
 			futures.add(sql.executeAsync(() -> {
+				int level = stats.getInteger_stats().get(0);
 				long balance = stats.getBalance().get();
-				int kitpvp_kills = stats.getKitpvp_kills().get();
-				int kitpvp_deaths = stats.getKitpvp_deaths().get();
-				int combo_kills = stats.getCombo_kills().get();
-				int combo_deaths = stats.getCombo_deaths().get();
-				int monthly_reward = stats.getMonthly_reward().get();
+				int kitpvp_kills = stats.getInteger_stats().get(1);
+				int kitpvp_deaths = stats.getInteger_stats().get(2);
+				int combo_kills = stats.getInteger_stats().get(3);
+				int combo_deaths = stats.getInteger_stats().get(4);
+				int monthly_reward = stats.getInteger_stats().get(5);
 				try {
 					sql.executionQuery("INSERT INTO `omega_stats` "
-							+ "(`uuid`, `name`, `balance`, `kitpvp_kills`, `kitpvp_deaths`, `combo_kills`, `combo_deaths`, `monthly_reward`) "
-							+ "VALUES (?, ?, ?, ?, ?, ?, ?) "
+							+ "(`uuid`, `name`, `level`, `balance`, `kitpvp_kills`, `kitpvp_deaths`, `combo_kills`, `combo_deaths`, `monthly_reward`) "
+							+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
 							+ "ON DUPLICATE KEY UPDATE "
-							+ "`name` = ?, `balance` = ?, `kitpvp_kills` = ?, `kitpvp_deaths` = ?, `combo_kills` = ?, `combo_deaths` = ?, `monthly_reward` = ?",
-							uuid.toString().replace("-", ""), name, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward,
-							name, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward);
+							+ "`name` = ?, `level` = ?, `balance` = ?, `kitpvp_kills` = ?, `kitpvp_deaths` = ?, `combo_kills` = ?, `combo_deaths` = ?, `monthly_reward` = ?",
+							uuid.toString().replace("-", ""), name, level, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward,
+							name, level, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward);
 				} catch (SQLException ex) {
 					ex.printStackTrace();
 				}

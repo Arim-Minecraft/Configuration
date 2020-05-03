@@ -24,6 +24,29 @@ import java.util.concurrent.locks.LockSupport;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Retains personal preferences for players. <br>
+ * <br>
+ * Available preferences are chat colour, name colour, a list of players friended, a list of players ignored,
+ * and eight on/off preferences, the indexes of which are as follows: <br>
+ * 0 {@literal -} AutoTree, true indicates on <br>
+ * 1 {@literal -} AutoItem, true indicates on <br>
+ * 2 {@literal -} PMs, true indicates PMs are allowed <br>
+ * 3 {@literal -} Sounds, true indicates custom sounds permitted <br>
+ * 4 {@literal -} Bypass PMs, true indicates ability to bypass others' PMs setting <br>
+ * 5 {@literal -} Sidebar, false disables the scoreboard <br>
+ * 6 {@literal -} Kit descriptions, false reduces kit description verbosity <br>
+ * 7 {@literal -} World chat, false only shows chat from the same world as the player <br>
+ * <br>
+ * Chat colour and name colour are stored as volatile strings. A user can't cause a concurrency error here. <br>
+ * The lists of friended and ignored players are combined into a map where a <code>true</code> value indicates
+ * a friend and a <code>false</code> value an ignored player. See {@link FriendedIgnored}. <br>
+ * The on/off preferences would be stored as a boolean array, but for efficiency purposes, this array
+ * is combined into a single byte, which again for efficiency purposes is an int.
+ * 
+ * @author A248
+ *
+ */
 public class MutablePrefs {
 
 	/**
@@ -112,16 +135,9 @@ public class MutablePrefs {
 	/**
 	 * Toggles an on/off preference according to its index and returns the updated result. <br>
 	 * <br>
-	 * 0 {@literal -} AutoTree, true indicates on <br>
-	 * 1 {@literal -} AutoItem, true indicates on <br>
-	 * 2 {@literal -} PMs, true indicates PMs are allowed <br>
-	 * 3 {@literal -} Sounds, true indicates custom sounds permitted <br>
-	 * 4 {@literal -} Bypass PMs, true indicates ability to bypass others' PMs setting <br>
-	 * 5 {@literal -} Sidebar, false disables the scoreboard <br>
-	 * 6 {@literal -} Kit descriptions, false reduces kit description verbosity <br>
-	 * 7 {@literal -} World chat, false only shows chat from the same world as the player <br>
-	 *  <br>
-	 *  <b>Note that bypassing PMs is an excalibur+ rank feature, so remember to check permissions.</b>
+	 * See the class javadoc for indexes <br>
+	 * <br>
+	 * <b>Note that bypassing PMs is an excalibur+ rank feature, so remember to check permissions.</b>
 	 * 
 	 * @param index the index of the preferences
 	 * @return the updated state

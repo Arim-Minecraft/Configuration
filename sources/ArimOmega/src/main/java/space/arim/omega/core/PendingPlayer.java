@@ -76,8 +76,9 @@ class PendingPlayer extends PartialPlayer {
 		futureStats = sql.selectAsync(() -> {
 			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_stats` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
 				if (rs.next()) {
-					return new MutableStats(rs.getLong("balance"), rs.getInt("kitpvp_kills"), rs.getInt("kitpvp_deaths"),
-							rs.getInt("combo_kills"), rs.getInt("combo_deaths"), rs.getInt("monthly_reward"));
+					return new MutableStats(rs.getInt("level"), rs.getLong("balance"), rs.getInt("kitpvp_kills"),
+							rs.getInt("kitpvp_deaths"), rs.getInt("combo_kills"), rs.getInt("combo_deaths"),
+							rs.getInt("monthly_reward"));
 				}
 			} catch (SQLException ex) {
 				ex.printStackTrace();

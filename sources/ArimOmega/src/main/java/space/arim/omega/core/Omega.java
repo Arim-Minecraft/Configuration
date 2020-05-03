@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -208,19 +209,26 @@ public class Omega implements AsyncStartingModule {
 	 * Remember to check player permissions first, only ranked players
 	 * have access to monthly rewards. <br>
 	 * <br>
-	 * This will return <code>false</code> the player's last reward
-	 * is not more than a month ago or there was a concurrency error. <br>
-	 * If <code>true</code> is returned, the value of the player's last reward
-	 * is automatically set to the current time.
+	 * Returns <code>false</code> if the player's last reward was less than a month ago. <br>
+	 * Else, the value of the player's last reward is automatically set to the current time. <br>
+	 * <br>
+	 * <i>The caller is trusted with providing the reward if this returns true.</i>
 	 * 
-	 * @param omega the omega manager
-	 * @return true if the reward was activated and reset, false otherwise
+	 * @param player the player
+	 * @return true if the reward was activated, false if the last reward was less than a month ago
 	 */
 	public boolean activateMonthlyReward(Player player) {
-		MutableStats stats = getPlayer(player).getStats();
-		int existing = stats.getMonthly_reward().get();
-		int now = currentTimeMinutes();
-		return (now - existing > MINUTES_IN_MONTH) && stats.getMonthly_reward().compareAndSet(existing, now);
+		AtomicIntegerArray integer_stats = getPlayer(player).getStats().getInteger_stats();
+		int existing;
+		int now;
+		do {
+			existing = integer_stats.get(5);
+			now = currentTimeMinutes();
+			if (now - existing < MINUTES_IN_MONTH) {
+				return false;
+			}
+		} while (!MutableStats.compareAndSetArray(integer_stats, 5, existing, now));
+		return true;
 	}
 	
 	/**
