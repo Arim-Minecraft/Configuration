@@ -1,7 +1,7 @@
 # TheServer
 
 Parts of the actual Arim server under development or configuration.
-None of this is actually used in production, it's merely here to help us collaborate.
+A lot of this isn't actually used in production, it's merely here to help us collaborate.
 
 ### Why public?
 
