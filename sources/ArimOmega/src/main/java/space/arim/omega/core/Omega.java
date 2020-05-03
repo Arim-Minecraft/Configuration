@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -75,7 +74,7 @@ public class Omega implements AsyncStartingModule {
 	 * This is used with the monthly reward of the player, which is also in minutes.
 	 * 
 	 */
-	private static final int MINUTES_IN_MONTH = 1440 * 30;
+	static final int MINUTES_IN_MONTH = 1440 * 30;
 	
 	/**
 	 * Milliseconds within a minute, used to divide into System.currentTimeMillis
@@ -202,33 +201,6 @@ public class Omega implements AsyncStartingModule {
 	 */
 	public boolean isOnline(UUID uuid) {
 		return getTransientPlayer(uuid) != null;
-	}
-	
-	/**
-	 * Activates the monthly reward for the player. <br>
-	 * Remember to check player permissions first, only ranked players
-	 * have access to monthly rewards. <br>
-	 * <br>
-	 * Returns <code>false</code> if the player's last reward was less than a month ago. <br>
-	 * Else, the value of the player's last reward is automatically set to the current time. <br>
-	 * <br>
-	 * <i>The caller is trusted with providing the reward if this returns true.</i>
-	 * 
-	 * @param player the player
-	 * @return true if the reward was activated, false if the last reward was less than a month ago
-	 */
-	public boolean activateMonthlyReward(Player player) {
-		AtomicIntegerArray integer_stats = getPlayer(player).getStats().getInteger_stats();
-		int existing;
-		int now;
-		do {
-			existing = integer_stats.get(5);
-			now = currentTimeMinutes();
-			if (now - existing < MINUTES_IN_MONTH) {
-				return false;
-			}
-		} while (!MutableStats.compareAndSetArray(integer_stats, 5, existing, now));
-		return true;
 	}
 	
 	/**
