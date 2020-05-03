@@ -11,6 +11,11 @@
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<arimapi.version>0.8.1-SNAPSHOT</arimapi.version>
+		<protocollib.version>4.5.0</protocollib.version>
+		<vault.version>1.7</vault.version>
+		<placeholderapi.version>2.10.4</placeholderapi.version>
+		<serverstarter.version>0.3.0-SNAPSHOT</serverstarter.version>
 	</properties>
 	
 	<build>
@@ -56,11 +61,22 @@
 		</plugins>
 	</build>
 	
+	<distributionManagement>
+		<repository>
+			<id>arim-repo</id>
+			<url>https://maven.cloudsmith.io/anand-beh/arim-repo/</url>
+		</repository>
+		<snapshotRepository>
+			<id>arim-repo</id>
+			<url>https://maven.cloudsmith.io/anand-beh/arim-repo/</url>
+		</snapshotRepository>
+	</distributionManagement>
+	
 	<dependencies>
 		<dependency>
 			<groupId>space.arim</groupId>
 			<artifactId>arimapi-core</artifactId>
-			<version>0.8.1-SNAPSHOT</version>
+			<version>${arimapi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.github.paperspigot</groupId>
@@ -91,12 +107,12 @@
 		<dependency>
 			<groupId>com.comphenix.protocol</groupId>
 			<artifactId>ProtocolLib</artifactId>
-			<version>4.5.0</version>
+			<version>${protocollib.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.MilkBowl</groupId>
 			<artifactId>VaultAPI</artifactId>
-			<version>1.7</version>
+			<version>${vault.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.gmail.filoghost.holographicdisplays</groupId>
@@ -134,7 +150,7 @@
 		<dependency>
 			<groupId>me.clip</groupId>
 			<artifactId>placeholderapi</artifactId>
-			<version>2.10.4</version>
+			<version>${placeholderapi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.mirreski</groupId>
@@ -149,7 +165,7 @@
 		<dependency>
 			<groupId>space.arim.server</groupId>
 			<artifactId>serverstarter</artifactId>
-			<version>0.3.0-SNAPSHOT</version>
+			<version>${serverstarter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.pablo67340.GUIShop</groupId>
