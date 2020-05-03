@@ -22,7 +22,6 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -74,7 +73,7 @@ public class General implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	private void doubleJumpStart(PlayerMoveEvent evt) { // hestitate to use but our code is fast
 		Player player = evt.getPlayer();
-		if (player.getWorld().getName().equals("Hub") && player.isOnGround() && !player.isFlying()) {
+		if (player.getWorld().getName().equals("Hub") && !player.isFlying() && player.isOnGround()) {
 			player.setAllowFlight(true);
 		}
 	}
@@ -118,15 +117,9 @@ public class General implements Listener {
 	
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	private void onJoin(PlayerJoinEvent evt) {
-		api.vanisher().onJoin(evt.getPlayer());
 		api.broadcast().addPlayer(evt.getPlayer());
 		api.scoreboard().addBoard(evt.getPlayer());
 		api.tablists().addTablist(evt.getPlayer());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	private void onTeleport(PlayerTeleportEvent evt) {
-		api.vanisher().onTeleport(evt.getPlayer());
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -135,13 +128,7 @@ public class General implements Listener {
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	private void onGameModeChange(PlayerGameModeChangeEvent evt) {
-		api.vanisher().onGameModeChange(evt.getPlayer());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	private void onQuit(PlayerQuitEvent evt) {
-		api.vanisher().onQuit(evt.getPlayer());
 		api.broadcast().removePlayer(evt.getPlayer());
 		api.scoreboard().removeBoard(evt.getPlayer());
 		api.tablists().removeTablist(evt.getPlayer());
