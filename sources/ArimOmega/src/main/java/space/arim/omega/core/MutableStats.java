@@ -232,7 +232,6 @@ public class MutableStats {
 	 * <br>
 	 * <i>The caller is trusted with providing physical rewards if this returns true.</i>
 	 * 
-	 * @param player the player
 	 * @return true if the reward was activated, false if the last reward was less than a month ago
 	 */
 	public boolean activateMonthlyReward() {
