@@ -119,7 +119,7 @@ public class OmegaPlugin extends JavaPlugin {
 					}
 				});
 			} else if (sender instanceof Player) {
-				sendMessage(sender, "&7Your balance is &a$" + economy.displayBalance(omega.getPlayer((Player) sender).getStats().getBalance().get()));
+				sendMessage(sender, "&7Your balance is &a$" + economy.displayBalance(omega.getPlayer((Player) sender).getStats().getCurrentBalance()));
 			} else {
 				sendMessage(sender, "&cSpecify a player.");
 			}

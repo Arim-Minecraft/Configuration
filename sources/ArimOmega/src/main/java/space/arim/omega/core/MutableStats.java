@@ -43,7 +43,7 @@ import lombok.Getter;
  */
 public class MutableStats {
 
-	@Getter
+	@Getter(AccessLevel.PACKAGE)
 	private final AtomicLong balance;
 	@Getter(AccessLevel.PACKAGE)
 	private final AtomicIntegerArray integer_stats;
@@ -126,12 +126,30 @@ public class MutableStats {
 	}
 	
 	/**
+	 * Gets the current balance of the player
+	 * 
+	 * @return the current balance
+	 */
+	public long getCurrentBalance() {
+		return balance.get();
+	}
+	
+	/**
 	 * Gets the player's kills in Kit PvP
 	 * 
 	 * @return the kills in kitpvp
 	 */
 	public int getKitPvP_Kills() {
 		return integer_stats.get(1);
+	}
+	
+	/**
+	 * Increments the player's kills in Kit PvP
+	 * 
+	 * @return the updated kills
+	 */
+	public int incrementKitPvP_Kills() {
+		return incrementAndGet(integer_stats, 1);
 	}
 	
 	/**
@@ -144,6 +162,15 @@ public class MutableStats {
 	}
 	
 	/**
+	 * Increments the player's deaths in Kit PvP
+	 * 
+	 * @return the updated deaths
+	 */
+	public int incrementKitPvP_Deaths() {
+		return incrementAndGet(integer_stats, 2);
+	}
+	
+	/**
 	 * Gets the player's kills in Combo
 	 * 
 	 * @return the kills in combo
@@ -153,12 +180,30 @@ public class MutableStats {
 	}
 	
 	/**
+	 * Increments the player's kills in Combo
+	 * 
+	 * @return the updated kills
+	 */
+	public int incrementCombo_Kills() {
+		return incrementAndGet(integer_stats, 3);
+	}
+	
+	/**
 	 * Gets the player's deaths in Combo
 	 * 
 	 * @return the deaths in combo
 	 */
 	public int getCombo_Deaths() {
 		return integer_stats.get(4);
+	}
+	
+	/**
+	 * Increments the player's deaths in Combo
+	 * 
+	 * @return the updated deaths
+	 */
+	public int incrementCombo_Deaths() {
+		return incrementAndGet(integer_stats, 4);
 	}
 	
 	/**
@@ -208,12 +253,20 @@ public class MutableStats {
 	 * See https://dzone.com/articles/wanna-get-faster-wait-bit
 	 */
 	
-	static boolean compareAndSetArray(AtomicIntegerArray atomIntArray, int i, int expect, int update) {
+	private static boolean compareAndSetArray(AtomicIntegerArray atomIntArray, int i, int expect, int update) {
 		if (!atomIntArray.compareAndSet(i, expect, update)) {
 			LockSupport.parkNanos(1L);
 			return false;
 		}
 		return true;
+	}
+	
+	private static int incrementAndGet(AtomicIntegerArray atomIntArray, int i) {
+		int expect;
+		do {
+			expect = atomIntArray.get(i);
+		} while (!compareAndSetArray(atomIntArray, i, expect, expect + 1));
+		return expect + 1;
 	}
 	
 }
