@@ -12,7 +12,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<arimapi.version>0.8.1-SNAPSHOT</arimapi.version>
-		<arimomega.version>0.3.0-SNAPSHOT</arimomega.version>
+		<arimomega.version>0.4.0-SNAPSHOT</arimomega.version>
 		<protocollib.version>4.5.0</protocollib.version>
 		<vault.version>1.7</vault.version>
 		<placeholderapi.version>2.10.4</placeholderapi.version>
