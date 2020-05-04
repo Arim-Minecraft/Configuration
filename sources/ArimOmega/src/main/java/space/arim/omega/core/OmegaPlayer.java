@@ -213,10 +213,10 @@ public class OmegaPlayer {
 		if (!prefs.isCurrentlyDefault()) {
 			futures.add(sql.executeAsync(() -> {
 				try {
-					byte toggle_prefs = (byte) prefs.toggle_prefs.get();
+					byte toggle_prefs = (byte) prefs.getToggle_prefs().get();
 					String chat_colour = prefs.getChatcolour();
 					String name_colour = prefs.getNamecolour();
-					String friended_ignored = prefs.getFriended_ignored().toString();
+					String friended_ignored = prefs.friendedIgnoredToString();
 					sql.executionQuery("INSERT INTO `omega_prefs` "
 							+ "(`uuid`, `toggle_prefs`, `chat_colour`, `name_colour`, `friended_ignored`) "
 							+ "VALUES (?, ?, ?, ?, ?) "

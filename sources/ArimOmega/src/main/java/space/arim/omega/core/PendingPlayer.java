@@ -89,7 +89,7 @@ class PendingPlayer extends PartialPlayer {
 			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_prefs` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
 				if (rs.next()) {
 					return new MutablePrefs(rs.getByte("toggle_prefs"), rs.getString("chat_colour"), rs.getString("name_colour"),
-							FriendedIgnored.fromString(rs.getString("friended_ignored")));
+							MutablePrefs.friendedIgnoredFromString(rs.getString("friended_ignored")));
 				}
 			} catch (SQLException ex) {
 				ex.printStackTrace();
