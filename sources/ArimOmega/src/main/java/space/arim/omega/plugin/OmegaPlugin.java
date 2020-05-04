@@ -36,7 +36,7 @@ import space.arim.omega.core.BaltopEntry;
 import space.arim.omega.core.Omega;
 import space.arim.omega.core.OmegaSwiftConomy;
 import space.arim.omega.util.BytesUtil;
-import space.arim.swiftconomy.core.AbstractSwiftConomy;
+import space.arim.swiftconomy.api.SwiftConomy;
 
 public class OmegaPlugin extends JavaPlugin {
 
@@ -61,7 +61,7 @@ public class OmegaPlugin extends JavaPlugin {
 			if (args.length >= 2) {
 				boolean isPlayer = sender instanceof Player;
 				long transaction;
-				AbstractSwiftConomy economy;
+				SwiftConomy economy;
 				try {
 					double inputAmount = Double.parseDouble(args[1]);
 					if (inputAmount <= 0D && !isPlayer) {
@@ -115,7 +115,7 @@ public class OmegaPlugin extends JavaPlugin {
 					if (baltopEntry == null) {
 						sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c has never been online.");
 					} else {
-						sendMessage(sender, "&7Balance for &e" + baltopEntry.getName() + "&7 is &a$" + economy.displayBalance(baltopEntry.getBalance()));
+						sendMessage(sender, "&7Balance for &e" + baltopEntry.getName() + "&7 is &a" + economy.displayBalance(baltopEntry.getBalance()));
 					}
 				});
 			} else if (sender instanceof Player) {
@@ -128,7 +128,7 @@ public class OmegaPlugin extends JavaPlugin {
 			omega.getEconomy().getTopBalances().thenAccept((entries) -> {
 				int position = 0;
 				for (BaltopEntry entry : entries) {
-					sendMessage(sender, "&3" + ++position + "&7. " + entry.getName() + " &a$" + omega.getEconomy().displayBalance(entry.getBalance()));
+					sendMessage(sender, "&3" + ++position + "&7. " + entry.getName() + " &a" + omega.getEconomy().displayBalance(entry.getBalance()));
 				}
 			});
 			return true;
