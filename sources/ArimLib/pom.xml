@@ -15,6 +15,7 @@
 		<arimomega.version>0.4.0-SNAPSHOT</arimomega.version>
 		<protocollib.version>4.5.0</protocollib.version>
 		<vault.version>1.7</vault.version>
+		<guishop.version>8.0-PRE</guishop.version>
 		<placeholderapi.version>2.10.4</placeholderapi.version>
 		<serverstarter.version>0.3.0-SNAPSHOT</serverstarter.version>
 	</properties>
@@ -174,11 +175,9 @@
 			<version>${serverstarter.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.pablo67340.GUIShop</groupId>
+			<groupId>com.github.pablo67340</groupId>
 			<artifactId>GUIShop</artifactId>
-			<version>7.3.9</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/dependencies/GUIShop-7.3.9.jar</systemPath>
+			<version>${guishop.version}</version>
 		</dependency>
 	</dependencies>
 	
