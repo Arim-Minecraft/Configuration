@@ -11,7 +11,7 @@
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<arimapi.version>0.8.1-SNAPSHOT</arimapi.version>
+		<arimapi.version>0.9.1-SNAPSHOT</arimapi.version>
 		<arimomega.version>0.4.0-SNAPSHOT</arimomega.version>
 		<protocollib.version>4.5.0</protocollib.version>
 		<vault.version>1.7</vault.version>
@@ -77,7 +77,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>space.arim</groupId>
-			<artifactId>arimapi-core</artifactId>
+			<artifactId>arimapi-plugin</artifactId>
 			<version>${arimapi.version}</version>
 		</dependency>
 		<dependency>

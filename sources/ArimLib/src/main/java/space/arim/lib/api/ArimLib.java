@@ -28,8 +28,6 @@ import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -37,6 +35,8 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import space.arim.shaded.org.slf4j.Logger;
 
 import space.arim.universal.util.AutoClosable;
 
