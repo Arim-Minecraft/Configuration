@@ -32,8 +32,8 @@ import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import space.arim.shaded.com.github.benmanes.caffeine.cache.Cache;
+import space.arim.shaded.com.github.benmanes.caffeine.cache.Caffeine;
 
 import space.arim.universal.util.AutoClosable;
 

@@ -12,7 +12,7 @@
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<arimapi.version>0.8.1-SNAPSHOT</arimapi.version>
+		<arimapi.version>0.9.1-SNAPSHOT</arimapi.version>
 		<universal.version>0.8.1-SNAPSHOT</universal.version>
 		<lombok.version>1.18.12</lombok.version>
 		<swiftconomy.version>0.3.0-SNAPSHOT</swiftconomy.version>
@@ -122,17 +122,10 @@
 						<configuration>
 							<artifactSet>
 								<includes>
-									<include>com.github.ben-manes.caffeine:caffeine</include>
 									<include>space.arim.swiftconomy:api</include>
 									<include>space.arim.swiftconomy:core</include>
 								</includes>
 							</artifactSet>
-							<relocations>
-								<relocation>
-									<pattern>com.github.benmanes.caffeine</pattern>
-									<shadedPattern>space.arim.shaded.com.github.benmanes.caffeine</shadedPattern>
-								</relocation>
-							</relocations>
 						</configuration>
 					</execution>
 				</executions>
@@ -187,11 +180,6 @@
 			<groupId>space.arim.swiftconomy</groupId>
 			<artifactId>api</artifactId>
 			<version>${swiftconomy.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.ben-manes.caffeine</groupId>
-			<artifactId>caffeine</artifactId>
-			<version>${caffeine.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.github.paperspigot</groupId>

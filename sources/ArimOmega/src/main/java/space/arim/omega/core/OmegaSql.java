@@ -25,10 +25,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import org.slf4j.Logger;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import space.arim.shaded.com.zaxxer.hikari.HikariConfig;
+import space.arim.shaded.com.zaxxer.hikari.HikariDataSource;
+import space.arim.shaded.org.slf4j.Logger;
 
 import space.arim.universal.util.AutoClosable;
 

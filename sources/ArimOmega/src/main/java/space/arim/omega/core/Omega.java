@@ -37,11 +37,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import space.arim.shaded.org.slf4j.Logger;
 
 import space.arim.api.concurrent.AsyncStartingModule;
 import space.arim.api.config.SimpleConfig;
