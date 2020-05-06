@@ -12,8 +12,8 @@
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.11</maven.compiler.source>
-    	<maven.compiler.target>1.11</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
+    	<maven.compiler.target>11</maven.compiler.target>
 		<arimapi.version>0.9.1-SNAPSHOT</arimapi.version>
 		<universal.version>0.8.1-SNAPSHOT</universal.version>
 		<lombok.version>1.18.12</lombok.version>
@@ -21,7 +21,7 @@
 		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
 		<serverstarter.version>0.3.0-SNAPSHOT</serverstarter.version>
 		<vault.version>1.7</vault.version>
-		<inventoryframework.version>inventoryframework</inventoryframework.version>
+		<inventoryframework.version>0.5.19</inventoryframework.version>
 	</properties>
 	
 	<licenses>
@@ -143,8 +143,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.0</version>
 				<configuration>
-					<source>1.11</source>
-					<target>1.11</target>
+					<source>11</source>
+					<target>11</target>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -207,9 +207,14 @@
 			<version>${vault.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.stefvanschie.inventoryframework</groupId>
+			<groupId>com.github.stefvanschie</groupId>
 			<artifactId>IF</artifactId>
 			<version>${inventoryframework.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains</groupId>
+			<artifactId>annotations</artifactId>
+			<version>16.0.2</version>
 		</dependency>
 	</dependencies>
 	
@@ -224,7 +229,7 @@
 		</repository>
 		<repository>
 			<id>jitpack.io</id>
-			<url>https://jitpack.io</url>
+			<url>https://www.jitpack.io</url>
 		</repository>
 	</repositories>
 </project>
