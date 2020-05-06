@@ -267,7 +267,7 @@ public class Omega implements AsyncStartingModule {
 	 * @param name the player name
 	 * @return the player or <code>null</code> if not found
 	 */
-	OmegaPlayer getPlayerByName(String name) {
+	public OmegaPlayer getPlayerByName(String name) {
 		for (OmegaPlayer player : players.values()) {
 			if (player.getName().equalsIgnoreCase(name)) {
 				return player;
