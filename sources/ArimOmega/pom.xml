@@ -18,10 +18,10 @@
 		<universal.version>0.8.1-SNAPSHOT</universal.version>
 		<lombok.version>1.18.12</lombok.version>
 		<swiftconomy.version>0.3.0-SNAPSHOT</swiftconomy.version>
-		<caffeine.version>2.8.1</caffeine.version>
 		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
 		<serverstarter.version>0.3.0-SNAPSHOT</serverstarter.version>
 		<vault.version>1.7</vault.version>
+		<inventoryframework.version>inventoryframework</inventoryframework.version>
 	</properties>
 	
 	<licenses>
@@ -126,8 +126,15 @@
 								<includes>
 									<include>space.arim.swiftconomy:api</include>
 									<include>space.arim.swiftconomy:core</include>
+									<include>com.github.stefvanschie.inventoryframework:IF</include>
 								</includes>
 							</artifactSet>
+							<relocations>
+								<relocation>
+									<pattern>com.github.stefvanschie.inventoryframework</pattern>
+									<shadedPattern>space.arim.omega.shaded.com.github.stefvanschie.inventoryframework</shadedPattern>
+								</relocation>
+							</relocations>
 						</configuration>
 					</execution>
 				</executions>
@@ -198,6 +205,11 @@
 			<groupId>com.github.MilkBowl</groupId>
 			<artifactId>VaultAPI</artifactId>
 			<version>${vault.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.stefvanschie.inventoryframework</groupId>
+			<artifactId>IF</artifactId>
+			<version>${inventoryframework.version}</version>
 		</dependency>
 	</dependencies>
 	
