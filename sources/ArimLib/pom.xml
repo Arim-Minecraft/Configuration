@@ -16,8 +16,8 @@
 		<arimapi.version>0.9.1-SNAPSHOT</arimapi.version>
 		<arimomega.version>0.4.0-SNAPSHOT</arimomega.version>
 		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
-		<tigerlib.bossbar.version>arim-2.0.1</tigerlib.bossbar.version>
-		<tigerlib.scoreboard.version>arim-1.0.2</tigerlib.scoreboard.version>
+		<tigerlib.bossbar.version>arim-2.0.4</tigerlib.bossbar.version>
+		<tigerlib.scoreboard.version>arim-1.0.4</tigerlib.scoreboard.version>
 		<protocollib.version>4.5.0</protocollib.version>
 		<vault.version>1.7</vault.version>
 		<holographicdisplays.version>2.4.1-SNAPSHOT</holographicdisplays.version>
@@ -96,6 +96,14 @@
 		<dependency>
 			<groupId>org.github.paperspigot</groupId>
 			<artifactId>paperspigot-api</artifactId>
+			<version>${spigot.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- Spigot dependency must come after Paper-API dependency
+			so that Player.spigot().setViewDistance(int) compiles -->
+		<dependency>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot</artifactId>
 			<version>${spigot.version}</version>
 			<scope>provided</scope>
 		</dependency>
