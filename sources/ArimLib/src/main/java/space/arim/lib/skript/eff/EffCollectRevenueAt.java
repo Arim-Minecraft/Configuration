@@ -24,9 +24,9 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import org.bukkit.Location;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.Container;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import com.pablo67340.guishop.api.GuiShopAPI;
@@ -57,8 +57,8 @@ public class EffCollectRevenueAt extends Effect {
 	@Override
 	protected void execute(Event e) {
 		BlockState state = location.getSingle(e).getBlock().getState();
-		if (state instanceof Container) {
-			Container container = (Container) state;
+		if (state instanceof InventoryHolder) {
+			InventoryHolder container = (InventoryHolder) state;
 
 			ArrayList<ItemStack> items = new ArrayList<ItemStack>();
 			for (ItemStack item : container.getInventory().getContents()) {
@@ -73,7 +73,6 @@ public class EffCollectRevenueAt extends Effect {
 			}
 
 			GuiShopAPI.sellItems(player.getSingle(e), itemArray);
-			
 		}
 		
 	}
