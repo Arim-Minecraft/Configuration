@@ -32,7 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-import org.slf4j.Logger;
+import space.arim.shaded.org.slf4j.Logger;
 
 import space.arim.universal.registry.Registry;
 import space.arim.universal.registry.RegistryPriority;

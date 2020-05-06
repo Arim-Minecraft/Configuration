@@ -11,13 +11,21 @@
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.11</maven.compiler.source>
+    	<maven.compiler.target>1.11</maven.compiler.target>
 		<arimapi.version>0.9.1-SNAPSHOT</arimapi.version>
 		<arimomega.version>0.4.0-SNAPSHOT</arimomega.version>
+		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
+		<tigerlib.bossbar.version>arim-2.0.1</tigerlib.bossbar.version>
+		<tigerlib.scoreboard.version>arim-1.0.2</tigerlib.scoreboard.version>
 		<protocollib.version>4.5.0</protocollib.version>
 		<vault.version>1.7</vault.version>
-		<guishop.version>8.0-PRE</guishop.version>
+		<holographicdisplays.version>2.4.1-SNAPSHOT</holographicdisplays.version>
+		<skript.version>dev25</skript.version>
 		<placeholderapi.version>2.10.4</placeholderapi.version>
+		<protocoltab.version>2.0.9</protocoltab.version>
 		<serverstarter.version>0.3.0-SNAPSHOT</serverstarter.version>
+		<guishop.version>8.0-PRE</guishop.version>
 	</properties>
 	
 	<build>
@@ -56,8 +64,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.0</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>1.11</source>
+					<target>1.11</target>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -88,13 +96,8 @@
 		<dependency>
 			<groupId>org.github.paperspigot</groupId>
 			<artifactId>paperspigot-api</artifactId>
-			<version>1.8.8-R0.1-SNAPSHOT</version>
+			<version>${spigot.version}</version>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.yaml</groupId>
-			<artifactId>snakeyaml</artifactId>
-			<version>1.26</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jdt</groupId>
@@ -104,12 +107,12 @@
 		<dependency>
     		<groupId>me.tigerhix.lib</groupId>
     		<artifactId>bossbar</artifactId>
-    		<version>arim-2.0.1</version>
+    		<version>${tigerlib.bossbar.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>me.tigerhix.lib</groupId>
 			<artifactId>scoreboard</artifactId>
-			<version>arim-1.0.2</version>
+			<version>${tigerlib.scoreboard.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.comphenix.protocol</groupId>
@@ -124,12 +127,12 @@
 		<dependency>
 			<groupId>com.gmail.filoghost.holographicdisplays</groupId>
 			<artifactId>holographicdisplays-api</artifactId>
-			<version>2.4.1-SNAPSHOT</version>
+			<version>${holographicdisplays.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.SkriptLang</groupId>
 			<artifactId>Skript</artifactId>
-			<version>dev25</version>
+			<version>${skript.version}</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
@@ -160,14 +163,9 @@
 			<version>${placeholderapi.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.mirreski</groupId>
-			<artifactId>RandomSK</artifactId>
-			<version>2.7.1</version>
-		</dependency>
-		<dependency>
 			<groupId>pl.kacperduras</groupId>
 			<artifactId>protocoltab</artifactId>
-			<version>2.0.9</version>
+			<version>${protocoltab.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>space.arim.server</groupId>
