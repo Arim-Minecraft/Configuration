@@ -26,21 +26,17 @@ import java.util.Set;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.api.util.log.LoggerConverter;
 
 import space.arim.omega.core.AltcheckEntry;
-import space.arim.omega.core.BaltopEntry;
 import space.arim.omega.core.Omega;
-import space.arim.omega.core.OmegaSwiftConomy;
 import space.arim.omega.util.BytesUtil;
-import space.arim.swiftconomy.api.SwiftConomy;
 
 public class OmegaPlugin extends JavaPlugin {
 
-	private Omega omega;
+	Omega omega;
 	
 	@Override
 	public void onEnable() {
@@ -48,6 +44,10 @@ public class OmegaPlugin extends JavaPlugin {
 		omega.registerWith(this);
 		omega.startLoad();
 		getServer().getScheduler().runTaskLater(this, omega::finishLoad, 1L);
+		EconomyCommands ecoCmds = new EconomyCommands(this);
+		getServer().getPluginCommand("pay").setExecutor(ecoCmds);
+		getServer().getPluginCommand("bal").setExecutor(ecoCmds);
+		getServer().getPluginCommand("baltop").setExecutor(ecoCmds);
 	}
 	
 	@Override
@@ -57,82 +57,7 @@ public class OmegaPlugin extends JavaPlugin {
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		if (command.getName().equals("pay")) {
-			if (args.length >= 2) {
-				boolean isPlayer = sender instanceof Player;
-				long transaction;
-				SwiftConomy economy;
-				try {
-					double inputAmount = Double.parseDouble(args[1]);
-					if (inputAmount <= 0D && !isPlayer) {
-						sendMessage(sender, "&cYou cannot pay negative or zero amounts.");
-						return true;
-					}
-					economy = omega.getEconomy();
-					transaction = economy.getArithmetic().fromDouble(inputAmount);
-				} catch (NumberFormatException ex) {
-					sendMessage(sender, "&cInvalid number: &e" + args[1]);
-					return true;
-				}
-				Player target = null;
-				for (Player other : getServer().getOnlinePlayers()) {
-					if (other.getName().equalsIgnoreCase(args[0])) {
-						target = other;
-						break;
-					}
-				}
-				if (target == null) {
-					sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c is offline.");
-					return true;
-				}
-				if (isPlayer) {
-					Boolean result = economy.pay(((Player) sender).getUniqueId(), target.getUniqueId(), transaction);
-					if (result == null) {
-						sendMessage(sender, "&7You do not have enough money to do this.");
-					} else if (result) {
-						sendMessage(sender, "&7Transferred &a$" + economy.displayBalance(transaction) + "&7 to " + target.getName());
-					} else {
-						sendMessage(sender, "&cInvalid state : Concurrency error – no balance stored for online player " + args[0]);
-					}
-				} else {
-					Boolean result = economy.deposit(target.getUniqueId(), transaction);
-					if (result == null) {
-						sendMessage(sender, "&7Cannot force &e" + args[0] + "&7 into debt.");
-					} else if (result) {
-						sendMessage(sender, "&7Gave &a$" + economy.displayBalance(transaction) + "&7 to " + target.getName());
-					} else {
-						sendMessage(sender, "&cInvalid state : Concurrency error – no balance stored for online player " + args[0]);
-					}
-				}
-			} else {
-				sendMessage(sender, "&cUsage: /pay &e<player> <amount>&c.");
-			}
-			return true;
-		} else if (command.getName().equals("bal")) {
-			OmegaSwiftConomy economy = omega.getEconomy();
-			if (args.length >= 1) {
-				economy.findOfflineBalance(args[0]).thenAccept((baltopEntry) -> {
-					if (baltopEntry == null) {
-						sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c has never been online.");
-					} else {
-						sendMessage(sender, "&7Balance for &e" + baltopEntry.getName() + "&7 is &a" + economy.displayBalance(baltopEntry.getBalance()));
-					}
-				});
-			} else if (sender instanceof Player) {
-				sendMessage(sender, "&7Your balance is &a$" + economy.displayBalance(omega.getPlayer((Player) sender).getStats().getCurrentBalance()));
-			} else {
-				sendMessage(sender, "&cSpecify a player.");
-			}
-			return true;
-		} else if (command.getName().equals("omegabaltop")) {
-			omega.getEconomy().getTopBalances().thenAccept((entries) -> {
-				int position = 0;
-				for (BaltopEntry entry : entries) {
-					sendMessage(sender, "&3" + ++position + "&7. " + entry.getName() + " &a" + omega.getEconomy().displayBalance(entry.getBalance()));
-				}
-			});
-			return true;
-		} else if (command.getName().equals("altcheck")) {
+		if (command.getName().equals("altcheck")) {
 			if (sender.hasPermission("arim.helper")) {
 				if (args.length >= 1) {
 					omega.findPlayerInfoWithIPs(args[0]).thenAccept((info) -> {
@@ -176,7 +101,7 @@ public class OmegaPlugin extends JavaPlugin {
 		return false;
 	}
 	
-	private void sendMessage(CommandSender sender, String message) {
+	void sendMessage(CommandSender sender, String message) {
 		sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
 	}
 	

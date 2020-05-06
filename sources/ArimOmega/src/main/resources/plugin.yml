@@ -15,8 +15,8 @@ commands:
     aliases: [balance]
     usage: /bal
     description: See player balance
-  omegabaltop:
-    aliases: [baltop, richest]
+  baltop:
+    aliases: [richest]
     usage: /baltop
     description: See top balances
   altcheck:
