@@ -22,6 +22,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.event.Event;
 
@@ -61,22 +62,15 @@ public class ExprFindTopLocationAt extends SimpleExpression<Location> {
 	protected Location[] get(Event e) {
 		Location current = this.location.getSingle(e);
 
+		World world = current.getWorld();
 		Block[] blocks = new Block[4];
-		blocks[0] = current.getBlock();
+		blocks[0] = world.getHighestBlockAt(current.getBlockX(), current.getBlockZ());
 		blocks[1] = findBlockAbove(current, 1);
 		blocks[2] = findBlockAbove(current, 2);
 		blocks[3] = findBlockAbove(current, 3);
-
-		for (int searches = 0; searches < 10; searches++) {
-			if (isSolidBlock(blocks[0]) && blocks[1].getType() == Material.AIR && blocks[2].getType() == Material.AIR
-					&& blocks[3].getType() == Material.AIR && blocks[1].getLightFromSky() > 10) {
-				return new Location[] {current};
-			}
-			blocks[0] = blocks[1];
-			blocks[1] = blocks[2];
-			blocks[2] = blocks[3];
-			blocks[3] = findBlockAbove(current, 3);
-			current.setY(current.getY() + 1);
+		if (isSolidBlock(blocks[0]) && blocks[1].getType() == Material.AIR && blocks[2].getType() == Material.AIR
+				&& blocks[3].getType() == Material.AIR && blocks[1].getLightFromSky() > 10) {
+			return new Location[] {current};
 		}
 		return null;
 	}
@@ -89,8 +83,7 @@ public class ExprFindTopLocationAt extends SimpleExpression<Location> {
 	
 	private boolean isSolidBlock(Block block) {
 		Material type = block.getType();
-		return type != Material.AIR && type != Material.WATER && type != Material.LAVA && type != Material.SAND
-				&& type != Material.GRAVEL;
+		return type != Material.SAND && type != Material.GRAVEL && type.isSolid() && type != Material.WATER && type != Material.LAVA;
 	}
 
 }
