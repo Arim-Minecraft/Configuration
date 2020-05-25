@@ -142,12 +142,19 @@ public class Omega implements AsyncStartingModule {
 	}
 	
 	/**
-	 * Run something for each transient player info
+	 * Run something for each transient player info. <br>
+	 * Will not do anything for OmegaPlayers which are saving
+	 * but not online, because such do not have transient info.
 	 * 
 	 * @param action what to do
 	 */
 	void forEachTransient(Consumer<TransientPlayer> action) {
-		players.forEach((uuid, player) -> action.accept(player.getTransientInfo()));
+		players.forEach((uuid, player) -> {
+			TransientPlayer transientPlayer = player.getTransientInfo();
+			if (transientPlayer != null) {
+				action.accept(transientPlayer);
+			}
+		});
 	}
 	
 	/**
