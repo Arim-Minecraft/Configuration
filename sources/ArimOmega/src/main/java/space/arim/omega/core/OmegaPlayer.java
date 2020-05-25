@@ -214,16 +214,16 @@ public class OmegaPlayer {
 			futures.add(sql.executeAsync(() -> {
 				try {
 					byte toggle_prefs = (byte) prefs.getToggle_prefs().get();
-					String chat_colour = prefs.getChatcolour();
-					String name_colour = prefs.getNamecolour();
+					int chatcolour = prefs.getChatcolour();
+					int namecolour = prefs.getNamecolour();
 					String friended_ignored = prefs.friendedIgnoredToString();
 					sql.executionQuery("INSERT INTO `omega_prefs` "
 							+ "(`uuid`, `toggle_prefs`, `chat_colour`, `name_colour`, `friended_ignored`) "
 							+ "VALUES (UNHEX(?), ?, ?, ?, ?) "
 							+ "ON DUPLICATE KEY UPDATE "
 							+ "`toggle_prefs` = ?, `chat_colour` = ?, `name_colour` = ?, `friended_ignored` = ?",
-							uuid.toString().replace("-", ""), toggle_prefs, chat_colour, name_colour, friended_ignored,
-							toggle_prefs, chat_colour, name_colour, friended_ignored);
+							uuid.toString().replace("-", ""), toggle_prefs, chatcolour, namecolour, friended_ignored,
+							toggle_prefs, chatcolour, namecolour, friended_ignored);
 				} catch (SQLException ex) {
 					ex.printStackTrace();
 				}

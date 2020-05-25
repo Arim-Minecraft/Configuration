@@ -94,8 +94,8 @@ public class OmegaSql extends PooledLoggingSql implements AutoClosable {
 						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_prefs` ("
 						+ "`uuid` BINARY(16) PRIMARY KEY,"
 						+ "`toggle_prefs` TINYINT NOT NULL,"
-						+ "`chat_colour` CHAR(2) NOT NULL,"
-						+ "`name_colour` CHAR(2) NOT NULL,"
+						+ "`chat_colour` INT NOT NULL,"
+						+ "`name_colour` INT NOT NULL,"
 						+ "`friended_ignored` VARCHAR(3499) NOT NULL)"));
 			} catch (SQLException ex) {
 				ex.printStackTrace();

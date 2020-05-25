@@ -75,10 +75,10 @@ public class MutablePrefs {
 	
 	@Getter
 	@Setter
-	private volatile String chatcolour;
+	private volatile char chatcolour;
 	@Getter
 	@Setter
-	private volatile String namecolour;
+	private volatile char namecolour;
 	
 	/**
 	 * A value of true indicates a friend, false an ignored user. <br>
@@ -103,7 +103,7 @@ public class MutablePrefs {
 	 */
 	private static final byte DEFAULT_TOGGLE_PREFS = (byte) byteFromBooleanArray(new boolean[] {false, false, true, true, false, true, true, true});
 	
-	MutablePrefs(byte toggle_prefs, String chat_colour, String namecolour, Map<UUID, Boolean> friended_ignored) {
+	MutablePrefs(byte toggle_prefs, char chat_colour, char namecolour, Map<UUID, Boolean> friended_ignored) {
 		this.toggle_prefs = new AtomicInteger(toggle_prefs);
 		this.chatcolour = chat_colour;
 		this.namecolour = namecolour;
@@ -121,7 +121,7 @@ public class MutablePrefs {
 	 */
 	// Values here MUST equal those in #isCurrentlyDefault
 	static MutablePrefs makeDefaultValues() {
-		return new MutablePrefs(DEFAULT_TOGGLE_PREFS, "&f", "&b", null);
+		return new MutablePrefs(DEFAULT_TOGGLE_PREFS, 'f', 'b', null);
 	}
 	
 	/**
@@ -131,8 +131,8 @@ public class MutablePrefs {
 	 */
 	boolean isCurrentlyDefault() {
 		return toggle_prefs.get() == DEFAULT_TOGGLE_PREFS &&
-				chatcolour.equals("&f") &&
-				namecolour.equals("&b") &&
+				chatcolour == 'f' &&
+				namecolour == 'b' &&
 				friended_ignored.get() == null;
 	}
 	

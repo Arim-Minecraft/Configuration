@@ -100,7 +100,7 @@ class PendingPlayer extends PartialPlayer {
 		futurePrefs = sql.selectAsync(() -> {
 			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_prefs` WHERE `uuid` = UNHEX(?)", uuid.toString().replace("-", ""))) {
 				if (rs.next()) {
-					return new MutablePrefs(rs.getByte("toggle_prefs"), rs.getString("chat_colour"), rs.getString("name_colour"),
+					return new MutablePrefs(rs.getByte("toggle_prefs"), (char) rs.getInt("chat_colour"), (char) rs.getInt("name_colour"),
 							MutablePrefs.friendedIgnoredFromString(rs.getString("friended_ignored")));
 				}
 			} catch (SQLException ex) {
