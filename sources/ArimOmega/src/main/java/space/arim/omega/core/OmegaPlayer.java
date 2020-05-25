@@ -214,16 +214,17 @@ public class OmegaPlayer {
 			futures.add(sql.executeAsync(() -> {
 				try {
 					byte toggle_prefs = (byte) prefs.getToggle_prefs().get();
-					int chatcolour = prefs.getChatcolour();
-					int namecolour = prefs.getNamecolour();
+					short chatcolour = (short) prefs.getChatcolour();
+					short namecolour = (short) prefs.getNamecolour();
+					int chat_and_name_colour = (chatcolour << 16) | (namecolour & 0xFFFF);
 					String friended_ignored = prefs.friendedIgnoredToString();
 					sql.executionQuery("INSERT INTO `omega_prefs` "
-							+ "(`uuid`, `toggle_prefs`, `chat_colour`, `name_colour`, `friended_ignored`) "
+							+ "(`uuid`, `toggle_prefs`, `chat_and_name_colour`, `friended_ignored`) "
 							+ "VALUES (UNHEX(?), ?, ?, ?, ?) "
 							+ "ON DUPLICATE KEY UPDATE "
-							+ "`toggle_prefs` = ?, `chat_colour` = ?, `name_colour` = ?, `friended_ignored` = ?",
-							uuid.toString().replace("-", ""), toggle_prefs, chatcolour, namecolour, friended_ignored,
-							toggle_prefs, chatcolour, namecolour, friended_ignored);
+							+ "`toggle_prefs` = ?, `chat_and_name_colour` = ?, `friended_ignored` = ?",
+							uuid.toString().replace("-", ""), toggle_prefs, chat_and_name_colour, friended_ignored,
+							toggle_prefs, chat_and_name_colour, friended_ignored);
 				} catch (SQLException ex) {
 					ex.printStackTrace();
 				}
