@@ -90,7 +90,7 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 		OmegaSql sql = omega.sql;
 		return omega.findPlayerInfo(name).thenCompose((info) -> (info == null) ? null : sql.selectAsync(() -> {
 			UUID uuid = info.getUuid();
-			try (ResultSet rs = sql.selectionQuery("SELECT `balance` FROM `omega_stats` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
+			try (ResultSet rs = sql.selectionQuery("SELECT `balance` FROM `omega_stats` WHERE `uuid` = UNHEX(?)", uuid.toString().replace("-", ""))) {
 
 				return new BaltopEntry(uuid, info.getName(), (rs.next()) ? rs.getLong("balance") : STARTING_BALANCE);
 
@@ -109,10 +109,10 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 			omega.forEach((uuid, player) ->
 				potentiallyAddToList(entries, uuid, player.getName(), player.getStats().getBalance().get()));
 
-			try (ResultSet rs = sql.selectionQuery("SELECT `uuid,name,balance` FROM `omega_stats` ORDER BY `balance` DESC LIMIT " + BALTOP_SIZE)) {
+			try (ResultSet rs = sql.selectionQuery("SELECT `HEX(uuid),name,balance` FROM `omega_stats` ORDER BY `balance` DESC LIMIT " + BALTOP_SIZE)) {
 				while (rs.next()) {
 
-					UUID uuid = UUIDUtil.expandAndParse(rs.getString("uuid"));
+					UUID uuid = UUIDUtil.expandAndParse(rs.getString("HEX(uuid)"));
 
 					// check if we already accounted for this player earlier
 					boolean found = false;

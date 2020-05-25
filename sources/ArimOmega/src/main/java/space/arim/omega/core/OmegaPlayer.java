@@ -179,7 +179,7 @@ public class OmegaPlayer {
 			try {
 				sql.executionQuery("INSERT INTO `omega_identify` "
 						+ "(`uuid`, `name`, `ips`, `updated`) "
-						+ "VALUES (?, ?, ?, ?) "
+						+ "VALUES (UNHEX(?), ?, ?, ?) "
 						+ "ON DUPLICATE KEY UPDATE "
 						+ "`name` = ?, `ips` = ?, `updated` = ?",
 						uuid.toString().replace("-", ""), name, iplist, updated,
@@ -200,7 +200,7 @@ public class OmegaPlayer {
 				try {
 					sql.executionQuery("INSERT INTO `omega_stats` "
 							+ "(`uuid`, `name`, `level`, `balance`, `kitpvp_kills`, `kitpvp_deaths`, `combo_kills`, `combo_deaths`, `monthly_reward`) "
-							+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+							+ "VALUES (UNHEX(?), ?, ?, ?, ?, ?, ?, ?, ?) "
 							+ "ON DUPLICATE KEY UPDATE "
 							+ "`name` = ?, `level` = ?, `balance` = ?, `kitpvp_kills` = ?, `kitpvp_deaths` = ?, `combo_kills` = ?, `combo_deaths` = ?, `monthly_reward` = ?",
 							uuid.toString().replace("-", ""), name, level, balance, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward,
@@ -219,7 +219,7 @@ public class OmegaPlayer {
 					String friended_ignored = prefs.friendedIgnoredToString();
 					sql.executionQuery("INSERT INTO `omega_prefs` "
 							+ "(`uuid`, `toggle_prefs`, `chat_colour`, `name_colour`, `friended_ignored`) "
-							+ "VALUES (?, ?, ?, ?, ?) "
+							+ "VALUES (UNHEX(?), ?, ?, ?, ?) "
 							+ "ON DUPLICATE KEY UPDATE "
 							+ "`toggle_prefs` = ?, `chat_colour` = ?, `name_colour` = ?, `friended_ignored` = ?",
 							uuid.toString().replace("-", ""), toggle_prefs, chat_colour, name_colour, friended_ignored,

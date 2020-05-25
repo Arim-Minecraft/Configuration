@@ -59,7 +59,7 @@ class PendingPlayer extends PartialPlayer {
 			 * If the list exceeds its limit, the top elements are removed until the size is within the limit.
 			 * 
 			 */
-			try (ResultSet rs = sql.selectionQuery("SELECT `ips` FROM `omega_identify` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
+			try (ResultSet rs = sql.selectionQuery("SELECT `ips` FROM `omega_identify` WHERE `uuid` = UNHEX(?)", uuid.toString().replace("-", ""))) {
 				if (rs.next()) {
 					for (String previous : rs.getString("ips").split(",")) {
 						byte[] previousIp = Base64.getDecoder().decode(previous);
@@ -86,7 +86,7 @@ class PendingPlayer extends PartialPlayer {
 			return ips.toArray(new Byte[][] {});
 		});
 		futureStats = sql.selectAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_stats` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
+			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_stats` WHERE `uuid` = UNHEX(?)", uuid.toString().replace("-", ""))) {
 				if (rs.next()) {
 					return new MutableStats(rs.getInt("level"), rs.getLong("balance"), rs.getInt("kitpvp_kills"),
 							rs.getInt("kitpvp_deaths"), rs.getInt("combo_kills"), rs.getInt("combo_deaths"),
@@ -98,7 +98,7 @@ class PendingPlayer extends PartialPlayer {
 			return MutableStats.makeDefaultValues();
 		});
 		futurePrefs = sql.selectAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_prefs` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
+			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_prefs` WHERE `uuid` = UNHEX(?)", uuid.toString().replace("-", ""))) {
 				if (rs.next()) {
 					return new MutablePrefs(rs.getByte("toggle_prefs"), rs.getString("chat_colour"), rs.getString("name_colour"),
 							MutablePrefs.friendedIgnoredFromString(rs.getString("friended_ignored")));

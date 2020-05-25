@@ -37,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -100,7 +101,7 @@ public class Omega implements AsyncStartingModule {
 	}
 
 	public void registerWith(JavaPlugin plugin) {
-		org.bukkit.Server server = plugin.getServer();
+		Server server = plugin.getServer();
 		server.getPluginManager().registerEvents(loader, plugin);
 		server.getServicesManager().register(Economy.class, economy, plugin, ServicePriority.High);
 	}
@@ -293,10 +294,10 @@ public class Omega implements AsyncStartingModule {
 		}
 		// MySQL is not case sensitive https://stackoverflow.com/a/61484046/6548501
 		return sql.selectAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT `uuid,name` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
+			try (ResultSet rs = sql.selectionQuery("SELECT `HEX(uuid),name` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
 				if (rs.next()) {
 
-					return new IdentifyingPlayerInfo(UUIDUtil.expandAndParse(rs.getString("uuid")),
+					return new IdentifyingPlayerInfo(UUIDUtil.expandAndParse(rs.getString("HEX(uuid)")),
 							rs.getString("name"), null);
 				}
 			} catch (SQLException ex) {
@@ -319,10 +320,10 @@ public class Omega implements AsyncStartingModule {
 			return CompletableFuture.completedFuture(new IdentifyingPlayerInfo(player.getUuid(), player.getName(), player.getIps()));
 		}
 		return sql.selectAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT `uuid,name,ips` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
+			try (ResultSet rs = sql.selectionQuery("SELECT `HEX(uuid),name,ips` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
 				if (rs.next()) {
 
-					return new IdentifyingPlayerInfo(UUIDUtil.expandAndParse(rs.getString("uuid")),
+					return new IdentifyingPlayerInfo(UUIDUtil.expandAndParse(rs.getString("HEX(uuid)")),
 							rs.getString("name"), OmegaPlayer.decodeIps(rs.getString("ips")));
 				}
 			} catch (SQLException ex) {
@@ -363,11 +364,11 @@ public class Omega implements AsyncStartingModule {
 				builder.append(" OR `ips` LIKE BINARY '%").append(encodedIp).append("%'");
 			}
 			String ipScanPredicate = builder.substring(" OR ".length());
-			try (ResultSet rs = sql.selectionQuery("SELECT * FROM `omega_alts` WHERE `uuid` != ? AND (" + ipScanPredicate + ")",
+			try (ResultSet rs = sql.selectionQuery("SELECT `HEX(uuid),name,ips` FROM `omega_identify` WHERE `uuid` != UNHEX(?) AND (" + ipScanPredicate + ")",
 					uuid.toString().replace("-", ""))) {
 				while (rs.next()) {
 
-					potentiallyAddToSetArray(checkFor, preresult, UUIDUtil.expandAndParse(rs.getString("uuid")),
+					potentiallyAddToSetArray(checkFor, preresult, UUIDUtil.expandAndParse(rs.getString("HEX(uuid)")),
 							rs.getString("name"), OmegaPlayer.decodeIps(rs.getString("ips")));
 				}
 			} catch (SQLException ex) {

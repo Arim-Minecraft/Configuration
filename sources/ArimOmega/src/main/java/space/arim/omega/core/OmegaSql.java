@@ -46,14 +46,15 @@ public class OmegaSql extends PooledLoggingSql implements AutoClosable {
 		HikariConfig config = new HikariConfig();
 		config.setMinimumIdle(connections);
 		config.setMaximumPoolSize(connections);
-		config.addDataSourceProperty("autoReconnect", "true");
-		config.addDataSourceProperty("characterEncoding","utf8");
-		config.addDataSourceProperty("useUnicode","true");
+		//config.addDataSourceProperty("autoReconnect", "true");
+		//config.addDataSourceProperty("characterEncoding","utf8mb4");
+		//config.addDataSourceProperty("useUnicode","true");
 		config.addDataSourceProperty("serverTimezone", "UTC");
 		config.setJdbcUrl(url.replace("%HOST%", host).replace("%PORT%", Integer.toString(port)).replace("%DATABASE%", database));
 		config.setUsername(username);
 		config.setPassword(password);
-		config.setConnectionTimeout(25000L);
+		config.setConnectionTimeout(25_000L); // 25 seconds
+		config.setMaxLifetime(1500_000L); // 1500 seconds = 25 minutes
 		asyncExecutor = Executors.newFixedThreadPool(connections);
 		dataSource = new HikariDataSource(config);
 	}
@@ -76,12 +77,12 @@ public class OmegaSql extends PooledLoggingSql implements AutoClosable {
 			try {
 				executionQueries(
 						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_identify`("
-						+ "`uuid` VARCHAR(32) PRIMARY KEY,"
+						+ "`uuid` BINARY(16) PRIMARY KEY,"
 						+ "`name` VARCHAR(16) NOT NULL,"
 						+ "`ips` VARCHAR(499) NOT NULL,"
 						+ "`updated` INT NOT NULL)"),
 						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_stats` ("
-						+ "`uuid` VARCHAR(32) PRIMARY KEY,"
+						+ "`uuid` BINARY(16) PRIMARY KEY,"
 						+ "`name` VARCHAR(16) NOT NULL,"
 						+ "`level` INT NOT NULL,"
 						+ "`balance` BIGINT NOT NULL,"
@@ -91,7 +92,7 @@ public class OmegaSql extends PooledLoggingSql implements AutoClosable {
 						+ "`combo_deaths` INT NOT NULL,"
 						+ "`monthly_reward` INT NOT NULL)"),
 						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_prefs` ("
-						+ "`uuid` VARCHAR(32) PRIMARY KEY,"
+						+ "`uuid` BINARY(16) PRIMARY KEY,"
 						+ "`toggle_prefs` TINYINT NOT NULL,"
 						+ "`chat_colour` CHAR(2) NOT NULL,"
 						+ "`name_colour` CHAR(2) NOT NULL,"
