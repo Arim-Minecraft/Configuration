@@ -53,23 +53,35 @@ class PendingPlayer extends PartialPlayer {
 		OmegaSql sql = omega.sql;
 		futureIps = sql.selectAsync(() -> {
 			ArrayList<Byte[]> ips = new ArrayList<>();
+			/*
+			 * Objective:
+			 * Select and update player IPs. Ensure the latest IP is at the bottom of the list.
+			 * If the list exceeds its limit, the top elements are removed until the size is within the limit.
+			 * 
+			 */
 			try (ResultSet rs = sql.selectionQuery("SELECT `ips` FROM `omega_identify` WHERE `uuid` = ?", uuid.toString().replace("-", ""))) {
 				if (rs.next()) {
 					for (String previous : rs.getString("ips").split(",")) {
 						byte[] previousIp = Base64.getDecoder().decode(previous);
-						if (!Arrays.equals(address, previousIp)) {
-							ips.add(BytesUtil.boxAll(previousIp));
+						// If the decoded IP is the current IP, don't add it to the list yet
+						// Later, we will at the current IP to the end of the list
+						if (Arrays.equals(address, previousIp)) {
+							continue;
 						}
+						ips.add(BytesUtil.boxAll(previousIp));
 					}
 				}
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
 
+			// Add the current IP to the end of the list
 			ips.add(BytesUtil.boxAll(address));
+
 			// We only store up to 20 IPs per player
-			if (ips.size() > OmegaPlayer.MAX_STORED_IPS) {
-				ips.remove(0); // remove oldest address
+			// Remove oldest elements until within the limit
+			while (ips.size() > OmegaPlayer.MAX_STORED_IPS) {
+				ips.remove(0);
 			}
 			return ips.toArray(new Byte[][] {});
 		});

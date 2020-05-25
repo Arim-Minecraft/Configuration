@@ -18,7 +18,9 @@
  */
 package space.arim.omega.core;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import space.arim.omega.util.BytesUtil;
 
@@ -43,26 +45,32 @@ class ExistingPlayer extends PartialPlayer {
 		player.setName(name);
 
 		/*
-		 * Here we update the player's IPs. We will need to expand the array
+		 * Here we update the player's IPs based on the latest IP
 		 */
 		byte[][] existingIps = player.getIps();
-		// if the player already has the current IP stored, don't do anything
-		if (BytesUtil.arrayContains2D(existingIps, address)) {
+		// Fast escape if the latest IP is already the one at the end of the list
+		if (Arrays.equals(address, existingIps[existingIps.length - 1])) {
 			return;
 		}
-		byte[][] updatedIps;
-		if (existingIps.length == OmegaPlayer.MAX_STORED_IPS) {
-			// delete the first element array and append the current IP, shifting everything up
-			updatedIps = BytesUtil.popFirstThenPadOne2D(existingIps);
-		} else {
-			// append the current IP, expanding the array
-			updatedIps = Arrays.copyOf(existingIps, existingIps.length + 1);
+		/*
+		 * Follow the same procedure described in PendingPlayer#begin
+		 */
+		List<Byte[]> ips = new ArrayList<>();
+		for (byte[] previousIp : existingIps) {
+			if (Arrays.equals(address, previousIp)) {
+				continue;
+			}
+			ips.add(BytesUtil.boxAll(previousIp));
 		}
-		updatedIps[updatedIps.length - 1] = address;
+
+		ips.add(BytesUtil.boxAll(address));
+		while (ips.size() > OmegaPlayer.MAX_STORED_IPS) {
+			ips.remove(0);
+		}
 		// It's fine that we don't have mutex here.
 		// Even if the player somehow logs in super-quickly twice,
 		// it's no big deal to store only 1 of those IPs
-		player.setIps(updatedIps);
+		player.setIps(BytesUtil.unboxAll2D(ips.toArray(new Byte[][] {})));
 	}
 	
 	@Override

@@ -18,10 +18,8 @@
  */
 package space.arim.omega.util;
 
-import java.util.Arrays;
-
 /**
- * Utility class for boxing and unboxing bytes.
+ * Utility class for boxing and unboxing byte arrays.
  * 
  * @author A248
  *
@@ -84,38 +82,6 @@ public class BytesUtil {
 			result[n] = unboxAll(source[n]);
 		}
 		return result;
-	}
-	
-	/**
-	 * Checks whether a 2D byte array contains a 1D array
-	 * 
-	 * @param targetArray the array in which to check
-	 * @param element the element to check for
-	 * @return true if the array contains the element, false otherwise
-	 */
-	public static boolean arrayContains2D(byte[][] targetArray, byte[] element) {
-		for (byte[] existing : targetArray) {
-			if (Arrays.equals(element, existing)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	/**
-	 * Removes the first element in the array, shifts all other elements,
-	 * and adds a null element to the end. <br>
-	 * The resulting array has thus the same size as the source.
-	 * 
-	 * @param source the source array
-	 * @return the resulting array with elements shifted
-	 */
-	public static byte[][] popFirstThenPadOne2D(byte[][] source) {
-		byte[][] updated = new byte[source.length][];
-		for (int n = 1; n < source.length; n ++) {
-			updated[n - 1] = source[n];
-		}
-		return updated;
 	}
 	
 }
