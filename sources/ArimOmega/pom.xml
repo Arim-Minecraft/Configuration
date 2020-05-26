@@ -14,7 +14,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>11</maven.compiler.source>
     	<maven.compiler.target>11</maven.compiler.target>
-		<arimapi.version>0.9.1-SNAPSHOT</arimapi.version>
+		<arimapi.version>0.12.1-SNAPSHOT</arimapi.version>
 		<universal.version>0.8.1-SNAPSHOT</universal.version>
 		<lombok.version>1.18.12</lombok.version>
 		<swiftconomy.version>0.4.1-SNAPSHOT</swiftconomy.version>
