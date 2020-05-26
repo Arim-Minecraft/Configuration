@@ -54,13 +54,7 @@ public class EconomyCommands implements CommandExecutor {
 					plugin.sendMessage(sender, "&cInvalid number: &e" + args[1]);
 					return true;
 				}
-				Player target = null;
-				for (Player other : plugin.getServer().getOnlinePlayers()) {
-					if (other.getName().equalsIgnoreCase(args[0])) {
-						target = other;
-						break;
-					}
-				}
+				Player target = plugin.getServer().getPlayer(args[0]);
 				if (target == null) {
 					plugin.sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c is offline.");
 					return true;
