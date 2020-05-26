@@ -64,7 +64,7 @@ public class EconomyCommands implements CommandExecutor {
 					if (result == null) {
 						plugin.sendMessage(sender, "&7You do not have enough money to do this.");
 					} else if (result) {
-						plugin.sendMessage(sender, "&7Transferred &a$" + economy.displayBalance(transaction) + "&7 to " + target.getName());
+						plugin.sendMessage(sender, "&7Transferred &a" + economy.displayBalance(transaction) + "&7 to " + target.getName());
 					} else {
 						plugin.sendMessage(sender, "&cInvalid state : Concurrency error – no balance stored for online player " + args[0]);
 					}
@@ -73,7 +73,7 @@ public class EconomyCommands implements CommandExecutor {
 					if (result == null) {
 						plugin.sendMessage(sender, "&7Cannot force &e" + args[0] + "&7 into debt.");
 					} else if (result) {
-						plugin.sendMessage(sender, "&7Gave &a$" + economy.displayBalance(transaction) + "&7 to " + target.getName());
+						plugin.sendMessage(sender, "&7Gave &a" + economy.displayBalance(transaction) + "&7 to " + target.getName());
 					} else {
 						plugin.sendMessage(sender, "&cInvalid state : Concurrency error – no balance stored for online player " + args[0]);
 					}
@@ -93,7 +93,7 @@ public class EconomyCommands implements CommandExecutor {
 					}
 				});
 			} else if (sender instanceof Player) {
-				plugin.sendMessage(sender, "&7Your balance is &a$" + economy.displayBalance(plugin.omega.getPlayer((Player) sender).getStats().getCurrentBalance()));
+				plugin.sendMessage(sender, "&7Your balance is &a" + economy.displayBalance(plugin.omega.getPlayer((Player) sender).getStats().getCurrentBalance()));
 			} else {
 				plugin.sendMessage(sender, "&cSpecify a player.");
 			}
