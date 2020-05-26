@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -60,35 +61,36 @@ public class OmegaPlugin extends JavaPlugin {
 		if (command.getName().equals("altcheck")) {
 			if (sender.hasPermission("arim.helper")) {
 				if (args.length >= 1) {
-					omega.findPlayerInfoWithIPs(args[0]).thenAccept((info) -> {
-						if (info == null) {
+					omega.findPlayerInfoWithIPs(args[0]).thenCompose((info) -> {
+						return (info == null) ? CompletableFuture.completedFuture(null) : omega.conductAltcheck(info);
+
+					}).thenAccept((map) -> {
+						if (map == null) {
 							sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c not found.");
 							return;
 						}
-						omega.conductAltcheck(info).thenAcceptAsync((map) -> {
-							boolean found = false;
-							for (Map.Entry<Byte[], Set<AltcheckEntry>> entry : map.entrySet()) {
-								Set<AltcheckEntry> matches = entry.getValue();
-								if (matches == null) {
-									continue;
-								}
-								try {
-									String address = InetAddress.getByAddress(BytesUtil.unboxAll(entry.getKey())).getHostAddress();
-									StringBuilder builder = new StringBuilder();
-									for (AltcheckEntry match : matches) {
-										builder.append(',').append(match.getName());
-									}
-									sendMessage(sender, "&7IP: &e" + address + "&7. Players: " + builder.substring(0) + ".");
-									found = true;
-								} catch (UnknownHostException ex) {
-									ex.printStackTrace();
-									sendMessage(sender, "&6Arim>> &cInternal error, check server console.");
-								}
+						boolean found = false;
+						for (Map.Entry<Byte[], Set<AltcheckEntry>> entry : map.entrySet()) {
+							Set<AltcheckEntry> matches = entry.getValue();
+							if (matches == null) {
+								continue;
 							}
-							if (!found) {
-								sendMessage(sender, "&6Arim>> &cNo other players have matching IP address to &e" + args[0] + "&c.");
+							try {
+								String address = InetAddress.getByAddress(BytesUtil.unboxAll(entry.getKey())).getHostAddress();
+								StringBuilder builder = new StringBuilder();
+								for (AltcheckEntry match : matches) {
+									builder.append(',').append(match.getName());
+								}
+								sendMessage(sender, "&7IP: &e" + address + "&7. Players: " + builder.substring(0) + ".");
+								found = true;
+							} catch (UnknownHostException ex) {
+								ex.printStackTrace();
+								sendMessage(sender, "&6Arim>> &cInternal error, check server console.");
 							}
-						});
+						}
+						if (!found) {
+							sendMessage(sender, "&6Arim>> &cNo other players have matching IP address to &e" + args[0] + "&c.");
+						}
 					});
 				} else {
 					sendMessage(sender, "&6Arim>> &cUsage: /altcheck &e<player>&c.");
