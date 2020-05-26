@@ -17,7 +17,7 @@
 		<arimapi.version>0.9.1-SNAPSHOT</arimapi.version>
 		<universal.version>0.8.1-SNAPSHOT</universal.version>
 		<lombok.version>1.18.12</lombok.version>
-		<swiftconomy.version>0.4.0-SNAPSHOT</swiftconomy.version>
+		<swiftconomy.version>0.4.1-SNAPSHOT</swiftconomy.version>
 		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
 		<serverstarter.version>0.3.0-SNAPSHOT</serverstarter.version>
 		<vault.version>1.7</vault.version>
