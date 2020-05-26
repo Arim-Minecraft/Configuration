@@ -37,12 +37,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import space.arim.shaded.org.slf4j.Logger;
 
 import space.arim.api.concurrent.AsyncStartingModule;
 import space.arim.api.config.SimpleConfig;
@@ -90,10 +90,9 @@ public class Omega implements AsyncStartingModule {
 
 		SimpleConfig sqlCfg = new SimpleConfig(dataFolder, "sql.yml", "version") {};
 		sqlCfg.reload();
-		sql = new OmegaSql(logger, sqlCfg.getString("host"), sqlCfg.getInt("port"), sqlCfg.getString("database"),
+		sql = new OmegaSql(sqlCfg.getString("host"), sqlCfg.getInt("port"), sqlCfg.getString("database"),
 				sqlCfg.getString("url"), sqlCfg.getString("username"), sqlCfg.getString("password"),
 				sqlCfg.getInt("connections"));
-		sqlCfg.close();
 
 		loader = new OmegaDataLoader(this);
 

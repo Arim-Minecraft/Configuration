@@ -29,8 +29,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import space.arim.api.util.log.LoggerConverter;
-
 import space.arim.omega.core.AltcheckEntry;
 import space.arim.omega.core.Omega;
 import space.arim.omega.util.BytesUtil;
@@ -39,9 +37,10 @@ public class OmegaPlugin extends JavaPlugin {
 
 	Omega omega;
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onEnable() {
-		omega = new Omega(getDataFolder(), LoggerConverter.get().convert(getLogger()));
+		omega = new Omega(getDataFolder(), space.arim.api.util.log.LoggerConverter.get().convert(getLogger()));
 		omega.registerWith(this);
 		omega.startLoad();
 		getServer().getScheduler().runTaskLater(this, omega::finishLoad, 1L);

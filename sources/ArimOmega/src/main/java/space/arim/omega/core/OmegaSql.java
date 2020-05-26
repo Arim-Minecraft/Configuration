@@ -18,6 +18,7 @@
  */
 package space.arim.omega.core;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -27,22 +28,19 @@ import java.util.function.Supplier;
 
 import space.arim.shaded.com.zaxxer.hikari.HikariConfig;
 import space.arim.shaded.com.zaxxer.hikari.HikariDataSource;
-import space.arim.shaded.org.slf4j.Logger;
 
 import space.arim.universal.util.AutoClosable;
 
+import space.arim.api.sql.AbstractSql;
 import space.arim.api.sql.ExecutableQuery;
-import space.arim.api.sql.PooledLoggingSql;
 
-public class OmegaSql extends PooledLoggingSql implements AutoClosable {
+public class OmegaSql extends AbstractSql implements AutoClosable {
 
-	private final Logger logger;
 	private final HikariDataSource dataSource;
 	
 	private final ExecutorService asyncExecutor;
 	
-	OmegaSql(Logger logger, String host, int port, String database, String url, String username, String password, int connections) {
-		this.logger = logger;
+	OmegaSql(String host, int port, String database, String url, String username, String password, int connections) {
 		HikariConfig config = new HikariConfig();
 		config.setMinimumIdle(connections);
 		config.setMaximumPoolSize(connections);
@@ -109,16 +107,6 @@ public class OmegaSql extends PooledLoggingSql implements AutoClosable {
 	<T> CompletableFuture<T> selectAsync(Supplier<T> supplier) {
 		return CompletableFuture.supplyAsync(supplier, asyncExecutor);
 	}
-
-	@Override
-	protected HikariDataSource getDataSource() {
-		return dataSource;
-	}
-
-	@Override
-	protected void log(String message) {
-		logger.info(message);
-	}
 	
 	@Override
 	public void close() {
@@ -129,6 +117,11 @@ public class OmegaSql extends PooledLoggingSql implements AutoClosable {
 			ex.printStackTrace();
 		}
 		dataSource.close();
+	}
+
+	@Override
+	protected Connection getConnection() throws SQLException {
+		return dataSource.getConnection();
 	}
 	
 }
