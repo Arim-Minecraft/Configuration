@@ -39,6 +39,11 @@ public class EconomyCommands implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (command.getName().equals("pay")) {
 			if (args.length >= 2) {
+				Player target = plugin.getServer().getPlayer(args[0]);
+				if (target == null) {
+					plugin.sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c is offline.");
+					return true;
+				}
 				boolean isPlayer = sender instanceof Player;
 				long transaction;
 				SwiftConomy economy;
@@ -52,11 +57,6 @@ public class EconomyCommands implements CommandExecutor {
 					transaction = economy.getArithmetic().fromDouble(inputAmount);
 				} catch (NumberFormatException ex) {
 					plugin.sendMessage(sender, "&cInvalid number: &e" + args[1]);
-					return true;
-				}
-				Player target = plugin.getServer().getPlayer(args[0]);
-				if (target == null) {
-					plugin.sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c is offline.");
 					return true;
 				}
 				if (isPlayer) {
