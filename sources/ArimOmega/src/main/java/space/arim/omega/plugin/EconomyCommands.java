@@ -44,7 +44,7 @@ public class EconomyCommands implements CommandExecutor {
 				SwiftConomy economy;
 				try {
 					double inputAmount = Double.parseDouble(args[1]);
-					if (inputAmount <= 0D && !isPlayer) {
+					if (inputAmount <= 0D && isPlayer) {
 						plugin.sendMessage(sender, "&cYou cannot pay negative or zero amounts.");
 						return true;
 					}
