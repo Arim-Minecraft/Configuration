@@ -66,7 +66,7 @@ public class EconomyCommands implements CommandExecutor {
 					} else if (result) {
 						plugin.sendMessage(sender, "&7Transferred &a" + economy.displayBalance(transaction) + "&7 to " + target.getName());
 					} else {
-						plugin.sendMessage(sender, "&cInvalid state : Concurrency error – no balance stored for online player " + args[0]);
+						plugin.sendMessage(sender, "&cInvalid state : Concurrency error – no balance stored for online player " + target.getName());
 					}
 				} else {
 					Boolean result = economy.deposit(target.getUniqueId(), transaction);
@@ -75,7 +75,7 @@ public class EconomyCommands implements CommandExecutor {
 					} else if (result) {
 						plugin.sendMessage(sender, "&7Gave &a" + economy.displayBalance(transaction) + "&7 to " + target.getName());
 					} else {
-						plugin.sendMessage(sender, "&cInvalid state : Concurrency error – no balance stored for online player " + args[0]);
+						plugin.sendMessage(sender, "&cInvalid state : Concurrency error – no balance stored for online player " + target.getName());
 					}
 				}
 			} else {
