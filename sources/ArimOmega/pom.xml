@@ -127,7 +127,6 @@
 									<!-- SwiftConomy -->
 									<include>space.arim.swiftconomy:api</include>
 									<include>space.arim.swiftconomy:core</include>
-									<include>space.arim.swiftconomy:importer</include>
 									<include>org.decimal4j:decimal4j</include>
 									<!-- GUI framework -->
 									<include>com.github.stefvanschie.inventoryframework:IF</include>
@@ -187,11 +186,6 @@
 		<dependency>
 			<groupId>space.arim.swiftconomy</groupId>
 			<artifactId>core</artifactId>
-			<version>${swiftconomy.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>space.arim.swiftconomy</groupId>
-			<artifactId>api</artifactId>
 			<version>${swiftconomy.version}</version>
 		</dependency>
 		<dependency>
