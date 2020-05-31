@@ -21,12 +21,17 @@ package space.arim.omega.core;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import space.arim.api.util.sql.CloseMe;
 
 import space.arim.uuidvault.api.UUIDUtil;
 
 abstract class PartialPlayer {
 
+	private static final Logger logger = LoggerFactory.getLogger(PartialPlayer.class);
+	
 	final byte[] rawUUID;
 	final String name;
 	private final byte[] address;
@@ -49,7 +54,7 @@ abstract class PartialPlayer {
 					+ "`updated` = ?", rawUUID, name, address, currentTime, currentTime)) {
 
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				logger.error("Error updating UUID {}, name {}, and address {}", rawUUID, name, address, ex);
 			}
 		});
 	}

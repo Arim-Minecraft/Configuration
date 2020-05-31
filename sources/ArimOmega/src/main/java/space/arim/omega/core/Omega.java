@@ -36,6 +36,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -57,7 +58,6 @@ public class Omega implements AsyncStartingModule {
 	private final File dataFolder;
 	private final ConcurrentHashMap<UUID, OmegaPlayer> players = new ConcurrentHashMap<>();
 	
-	final Logger logger;
 	final OmegaSql sql;
 	final OmegaDataLoader loader;
 	@Getter
@@ -74,9 +74,10 @@ public class Omega implements AsyncStartingModule {
 	 */
 	private static final int MILLIS_IN_MINUTE = 60000;
 	
-	public Omega(File dataFolder, Logger logger) {
+	private static final Logger logger = LoggerFactory.getLogger(Omega.class);
+	
+	public Omega(File dataFolder) {
 		this.dataFolder = dataFolder;
-		this.logger = logger;
 
 		SimpleConfig sqlCfg = new SimpleConfig(dataFolder, "sql.yml", "version") {};
 		sqlCfg.reload();
@@ -275,7 +276,7 @@ public class Omega implements AsyncStartingModule {
 					return new PlayerInfo(UUIDUtil.uuidFromByteArray(rs.getBytes("uuid")), rs.getString("name"));
 				}
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				logger.error("Error while finding offline player info for {}", name, ex);
 			}
 			return null;
 		});
@@ -314,7 +315,7 @@ public class Omega implements AsyncStartingModule {
 						rs.getString("name"), BytesUtil.unboxAll2D(ips.toArray(new Byte[][] {})));
 
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				logger.error("Error while finding offline player info including addresses for {}", name, ex);
 			}
 			return null;
 		});
@@ -340,7 +341,7 @@ public class Omega implements AsyncStartingModule {
 							.add(new PlayerInfo(UUIDUtil.uuidFromByteArray(rs.getBytes("final_uuid")), rs.getString("final_name")));
 				}
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				logger.error("Error while conducting altcheck for {}", uuid, ex);
 			}
 			return result;
 		});

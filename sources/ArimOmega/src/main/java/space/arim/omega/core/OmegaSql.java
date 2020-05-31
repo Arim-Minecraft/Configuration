@@ -25,6 +25,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import space.arim.shaded.com.zaxxer.hikari.HikariConfig;
 
 import space.arim.universal.util.AutoClosable;
@@ -36,6 +39,8 @@ import space.arim.api.util.sql.SqlQuery;
 public class OmegaSql extends HikariPoolSqlBackend implements AutoClosable {
 	
 	private final ExecutorService asyncExecutor;
+	
+	private static final Logger logger = LoggerFactory.getLogger(OmegaSql.class);
 	
 	OmegaSql(String host, int port, String database, String url, String username, String password, int connections) {
 		super(buildHikariConfig(host, port, database, url, username, password, connections));
@@ -110,7 +115,7 @@ public class OmegaSql extends HikariPoolSqlBackend implements AutoClosable {
 							+ "`name_colour` SMALLINT NOT NULL)")))) {
 
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				logger.error("Error creating tables", ex);
 			}
 		});
 	}
@@ -125,12 +130,14 @@ public class OmegaSql extends HikariPoolSqlBackend implements AutoClosable {
 	
 	@Override
 	public void close() {
+		logger.debug("Beginning shutdown");
 		asyncExecutor.shutdown();
 		try {
 			super.close();
 			asyncExecutor.awaitTermination(15L, TimeUnit.SECONDS);
+			logger.info("Shutdown completed without errors");
 		} catch (SQLException | InterruptedException ex) {
-			ex.printStackTrace();
+			logger.error("Error during shutdown", ex);
 		}
 	}
 	

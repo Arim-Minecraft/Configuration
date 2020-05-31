@@ -26,6 +26,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -134,6 +137,8 @@ public class OmegaPlayer {
 	 * 
 	 */
 	private static final int MINUTES_IN_MONTH = 1440 * 30;
+	
+	private static final Logger logger = LoggerFactory.getLogger(OmegaPlayer.class);
 	
 	OmegaPlayer(UUID uuid, String name, Rank rank, PlayerNumbers numbers) {
 		this.uuid = uuid;
@@ -472,7 +477,7 @@ public class OmegaPlayer {
 					balance, level, kitpvp_kills, kitpvp_deaths, combo_kills, combo_deaths, monthly_reward, toggle_prefs, chatcolour, namecolour)) {
 				
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				logger.error("Error while saving {} / {}", uuid, name, ex);
 			}
 		}).thenRun(() -> {
 			if (transientInfo == null) {

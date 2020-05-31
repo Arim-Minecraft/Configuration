@@ -36,10 +36,9 @@ public class OmegaPlugin extends JavaPlugin {
 
 	Omega omega;
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public void onEnable() {
-		omega = new Omega(getDataFolder(), space.arim.api.util.log.LoggerConverter.get().convert(getLogger()));
+		omega = new Omega(getDataFolder());
 		omega.registerWith(this);
 		omega.startLoad();
 		getServer().getScheduler().runTaskLater(this, omega::finishLoad, 1L);

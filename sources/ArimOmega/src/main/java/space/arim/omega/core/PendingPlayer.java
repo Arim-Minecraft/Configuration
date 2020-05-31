@@ -23,6 +23,9 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A player whose data is being loaded from the SQL backend.
  * 
@@ -31,6 +34,8 @@ import java.util.concurrent.CompletableFuture;
  */
 class PendingPlayer extends PartialPlayer {
 
+	private static final Logger logger = LoggerFactory.getLogger(PendingPlayer.class);
+	
 	private final UUID uuid;
 
 	private volatile CompletableFuture<PlayerNumbers> futureNumbers;
@@ -55,8 +60,9 @@ class PendingPlayer extends PartialPlayer {
 									rs.getInt("combo_kills"), rs.getInt("combo_deaths"), rs.getInt("monthly_reward")},
 							rs.getByte("toggle_prefs"), (char) rs.getShort("chat_colour"), (char) rs.getShort("name_colour"));
 				}
+				logger.debug("No player stats/prefs found for {}, using default values", uuid);
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				logger.error("Error selecting player statistics and preferences for {}", uuid, ex);
 			}
 			return PlayerNumbers.makeDefaultValues();
 		});

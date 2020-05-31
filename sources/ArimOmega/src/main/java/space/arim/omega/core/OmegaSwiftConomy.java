@@ -30,6 +30,9 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import space.arim.swiftconomy.core.AbstractSwiftConomy;
 
 import space.arim.uuidvault.api.UUIDUtil;
@@ -43,6 +46,8 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 	static final long STARTING_BALANCE = 3000_0000L;
 	
 	private static final int BALTOP_SIZE = 5;
+	
+	private static final Logger logger = LoggerFactory.getLogger(OmegaSwiftConomy.class);
 	
 	private final Omega omega;
 	
@@ -104,7 +109,7 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 					return new BaltopEntry(UUIDUtil.uuidFromByteArray(rs.getBytes("final_uuid")), rs.getString("final_name"), rs.getLong("balance"));
 				}
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				logger.error("Error finding offline balance for {}", name, ex);
 			}
 			return null;
 		});
@@ -148,7 +153,7 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 					}
 				}
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				logger.error("Error determing baltop", ex);
 			}
 			return entries;
 		});
