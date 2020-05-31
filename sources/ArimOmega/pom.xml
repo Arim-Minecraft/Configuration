@@ -18,6 +18,7 @@
 		<universal.version>0.8.1-SNAPSHOT</universal.version>
 		<lombok.version>1.18.12</lombok.version>
 		<swiftconomy.version>0.4.1-SNAPSHOT</swiftconomy.version>
+		<uuidvault.version>0.2.0-SNAPSHOT</uuidvault.version>
 		<spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
 		<serverstarter.version>0.3.0-SNAPSHOT</serverstarter.version>
 		<vault.version>1.7</vault.version>
@@ -187,6 +188,11 @@
 			<groupId>space.arim.swiftconomy</groupId>
 			<artifactId>core</artifactId>
 			<version>${swiftconomy.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>space.arim.uuidvault</groupId>
+			<artifactId>api</artifactId>
+			<version>${uuidvault.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.github.paperspigot</groupId>
