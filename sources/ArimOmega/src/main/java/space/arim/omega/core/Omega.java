@@ -45,6 +45,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.api.concurrent.AsyncStartingModule;
 import space.arim.api.config.SimpleConfig;
+import space.arim.api.util.sql.CompositeQueryResult;
 
 import space.arim.omega.util.BytesUtil;
 
@@ -363,18 +364,16 @@ public class Omega implements AsyncStartingModule {
 	 * @return a completable future whose result is a map which is empty if the altcheck yielded no results
 	 */
 	public CompletableFuture<Map<Byte[], Set<PlayerInfo>>> conductAltcheck(String name) {
-		return findPlayerInfo(name).thenCompose((info) -> (info == null) ? CompletableFuture.completedFuture(null) : conductAltcheck(info));
-		// TODO
-		// We can't use this until ArimAPI adds support for composite results
-		/*
-		sql.selectAsync(() -> {
+		//Fallback in case our complicated query breaks :P
+		//return findPlayerInfo(name).thenCompose((info) -> (info == null) ? CompletableFuture.completedFuture(null) : conductAltcheck(info));
+		return sql.selectAsync(() -> {
 			Map<Byte[], Set<PlayerInfo>> result = new HashMap<>();
 			/*
 			 * SQL Objective
 			 * Find other player names whose addresses match the UUID corresponding to the name,
 			 * all using the most up-to-date name records.
 			 */
-			/*try (ResultSet rs = sql.select("CREATE VIEW `tempViewUuid` AS "
+			try (CompositeQueryResult cqr = sql.composite("CREATE VIEW `tempViewUuid` AS "
 					+ "SELECT `uuid` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1; "
 					
 					+ "CREATE VIEW `tempViewAddresses` "
@@ -389,7 +388,9 @@ public class Omega implements AsyncStartingModule {
 					
 					+ "DROP VIEW `tempViewAddresses`; "
 					+ "DROP VIEW `tempViewUuid`", name)) {
-				
+
+				cqr.skip(2);
+				ResultSet rs = cqr.next().toResultSet();
 				while (rs.next()) {
 					result.computeIfAbsent(BytesUtil.boxAll(rs.getBytes("final_address`")), (k) -> new HashSet<>())
 							.add(new PlayerInfo(UUIDUtil.uuidFromByteArray(rs.getBytes("final_uuid")), rs.getString("final_name")));
@@ -399,7 +400,6 @@ public class Omega implements AsyncStartingModule {
 			}
 			return result;
 		});
-		*/
 		/*
 		 * "This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"
 		 * So, our subquery can't work because it requires LIMIT
