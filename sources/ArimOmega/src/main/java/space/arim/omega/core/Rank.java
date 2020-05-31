@@ -33,7 +33,7 @@ public class Rank {
 	@Getter
 	private final String json;
 	
-	public static final Rank NONE = new Rank("default", "None", "None", "None");
+	public static final Rank NONE = new Rank("default", "", "", "");
 	
 	public String getPermission() {
 		return "arim.rank." + id;
