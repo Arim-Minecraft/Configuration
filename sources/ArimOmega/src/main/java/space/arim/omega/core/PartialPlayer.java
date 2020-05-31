@@ -18,9 +18,41 @@
  */
 package space.arim.omega.core;
 
+import java.sql.SQLException;
+import java.util.UUID;
+
+import space.arim.api.util.sql.CloseMe;
+
+import space.arim.uuidvault.api.UUIDUtil;
+
 abstract class PartialPlayer {
 
-	abstract void begin(Omega omega);
+	final byte[] rawUUID;
+	final String name;
+	private final byte[] address;
+	
+	PartialPlayer(UUID uuid, String name, byte[] address) {
+		rawUUID = UUIDUtil.byteArrayFromUUID(uuid);
+		this.name = name;
+		this.address = address;
+	}
+	
+	void begin(Omega omega) {
+		OmegaSql sql = omega.sql;
+		sql.executeAsync(() -> {
+			long currentTime = System.currentTimeMillis();
+			try (CloseMe cm = sql.execute(
+					"INSERT INTO `omega_identify` "
+					+ "(`uuid`, `name`, `address`, `updated`) "
+					+ "VALUES (?, ?, ?, ?) "
+					+ "ON DUPLICATE KEY UPDATE "
+					+ "`updated` = ?", rawUUID, name, address, currentTime, currentTime)) {
+
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+		});
+	}
 	
 	abstract void joinLoading();
 	

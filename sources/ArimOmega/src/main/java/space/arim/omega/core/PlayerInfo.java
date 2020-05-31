@@ -25,10 +25,9 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class AltcheckEntry {
+public class PlayerInfo {
 
 	private final UUID uuid;
 	private final String name;
-	private final byte[] address;
 	
 }

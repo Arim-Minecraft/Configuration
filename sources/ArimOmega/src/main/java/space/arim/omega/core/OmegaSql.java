@@ -18,7 +18,6 @@
  */
 package space.arim.omega.core;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -27,73 +26,89 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import space.arim.shaded.com.zaxxer.hikari.HikariConfig;
-import space.arim.shaded.com.zaxxer.hikari.HikariDataSource;
 
 import space.arim.universal.util.AutoClosable;
 
-import space.arim.api.sql.AbstractSql;
-import space.arim.api.sql.ExecutableQuery;
+import space.arim.api.util.sql.CloseMe;
+import space.arim.api.util.sql.HikariPoolSqlBackend;
+import space.arim.api.util.sql.SqlQuery;
 
-public class OmegaSql extends AbstractSql implements AutoClosable {
-
-	private final HikariDataSource dataSource;
+public class OmegaSql extends HikariPoolSqlBackend implements AutoClosable {
 	
 	private final ExecutorService asyncExecutor;
 	
 	OmegaSql(String host, int port, String database, String url, String username, String password, int connections) {
+		super(buildHikariConfig(host, port, database, url, username, password, connections));
+		asyncExecutor = Executors.newFixedThreadPool(connections);
+	}
+	
+	private static HikariConfig buildHikariConfig(String host, int port, String database, String url, String username,
+			String password, int connections) {
+
 		HikariConfig config = new HikariConfig();
+		config.setPoolName("Omega Connection Pool");
 		config.setMinimumIdle(connections);
 		config.setMaximumPoolSize(connections);
 		//config.addDataSourceProperty("autoReconnect", "true");
 		//config.addDataSourceProperty("characterEncoding","utf8mb4");
 		//config.addDataSourceProperty("useUnicode","true");
 		config.addDataSourceProperty("serverTimezone", "UTC");
+		config.addDataSourceProperty("allowMultiQueries", "true");
+		config.setAutoCommit(false);
 		config.setJdbcUrl(url.replace("%HOST%", host).replace("%PORT%", Integer.toString(port)).replace("%DATABASE%", database));
 		config.setUsername(username);
 		config.setPassword(password);
 		config.setConnectionTimeout(25_000L); // 25 seconds
 		config.setMaxLifetime(1500_000L); // 1500 seconds = 25 minutes
-		asyncExecutor = Executors.newFixedThreadPool(connections);
-		dataSource = new HikariDataSource(config);
+		return config;
 	}
 	
 	/**
 	 * Creates all tables if they do not exist <br>
 	 * <br>
-	 * For the alts table, the ips column has a max size dependent on the implementation of its serialised form.
-	 * IPs are stored as base64 strings and separated by commas. The most number of IPs stored for a single player is capped at 20.
-	 * Ipv6 address have length 24. Therefore, the max size of the column is 20 * 24 + 19 if all 20 addresses are ipv6. <br>
+	 * UUIDs are stored as <code>BINARY(16)</code> reflecting the fact that they are 16 bytes / 128 bits.
+	 * To convert a UUID object to the appropriate byte array, and back, take advantage of UUIDVault's UUIDUtil. <br>
+	 * IP addresses are stored as <code>VARBINARY(16)</code>. IPv4 addresses only use 4 bytes, but IPv6 ones use 16.
+	 * InetAddress has built-in methods to convert addresses to and from byte arrays.
 	 * <br>
-	 * For the prefs table, the friended_ignored column has a max size dependent on the implementation of its serialised form.
-	 * See {@link MutablePrefs#getFriended_ignored()} and {@link MutablePrefs#mapToString(java.util.Map)}. <br>
-	 * Thus, the max size of the column is 50 * (32 + 1 + 1) + 50 * (32 + 1 + 1) + 99, or 3499.
+	 * <br>
+	 * <b>Tables</b> <br>
+	 * <br>
+	 * The player identifiers table is <i>omega_identify</i>. It contains distinct combinations
+	 * of UUIDs, names, and IP addresses, the column names being <code>`uuid`, `name`, `address`</code>.
+	 * Names are VARCHAR(16) reflecting the fact that MC accounts may only have 16 characters at most.
+	 * Each row also has a column, <code>`updated`</code>, a unix timestamp, in miliseconds, of the last time
+	 * the record was updated or created; this is a BIGINT. <br>
+	 * <br>
+	 * The stats/prefs table, a.k.a. the numbers table, is <i>omega_numbers</i>. It is essentially
+	 * a key-value mapping of UUIDs to basic player statistics and information.
 	 * 
 	 * @return a future indicating the progress
 	 */
 	CompletableFuture<?> makeTablesIfNotExist() {
 		return executeAsync(() -> {
-			try {
-				executionQueries(
-						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_identify`("
-						+ "`uuid` BINARY(16) PRIMARY KEY,"
-						+ "`name` VARCHAR(16) NOT NULL,"
-						+ "`ips` VARCHAR(499) NOT NULL,"
-						+ "`updated` INT NOT NULL)"),
-						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_stats` ("
-						+ "`uuid` BINARY(16) PRIMARY KEY,"
-						+ "`name` VARCHAR(16) NOT NULL,"
-						+ "`level` INT NOT NULL,"
-						+ "`balance` BIGINT NOT NULL,"
-						+ "`kitpvp_kills` INT NOT NULL,"
-						+ "`kitpvp_deaths` INT NOT NULL,"
-						+ "`combo_kills` INT NOT NULL,"
-						+ "`combo_deaths` INT NOT NULL,"
-						+ "`monthly_reward` INT NOT NULL)"),
-						new ExecutableQuery("CREATE TABLE IF NOT EXISTS `omega_prefs` ("
-						+ "`uuid` BINARY(16) PRIMARY KEY,"
-						+ "`toggle_prefs` TINYINT NOT NULL,"
-						+ "`chat_and_name_colour` INT NOT NULL,"
-						+ "`friended_ignored` VARCHAR(3499) NOT NULL)"));
+			try (CloseMe cm = execute(
+					SqlQuery.of("CREATE TABLE IF NOT EXISTS `omega_identify`("
+							+ "`uuid` BINARY(16) NOT NULL, "
+							+ "`name` VARCHAR(16) NOT NULL, "
+							+ "`address` VARBINARY(16) NOT NULL, "
+							+ "`updated` BIGINT NOT NULL, "
+							+ "PRIMARY KEY (`uuid`, `name`, `address`))",
+					SqlQuery.of("CREATE TABLE IF NOT EXISTS `omega_numbers` ("
+							+ "`uuid` BINARY(16) PRIMARY KEY, "
+							// Statistics
+							+ "`balance` BIGINT NOT NULL, "
+							+ "`level` INT NOT NULL, "
+							+ "`kitpvp_kills` INT NOT NULL, "
+							+ "`kitpvp_deaths` INT NOT NULL, "
+							+ "`combo_kills` INT NOT NULL, "
+							+ "`combo_deaths` INT NOT NULL, "
+							+ "`monthly_reward` INT NOT NULL, "
+							// Preferences
+							+ "`toggle_prefs` TINYINT NOT NULL, "
+							+ "`chat_colour` SMALLINT NOT NULL, "
+							+ "`name_colour` SMALLINT NOT NULL)")))) {
+
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
@@ -112,16 +127,11 @@ public class OmegaSql extends AbstractSql implements AutoClosable {
 	public void close() {
 		asyncExecutor.shutdown();
 		try {
+			super.close();
 			asyncExecutor.awaitTermination(15L, TimeUnit.SECONDS);
-		} catch (InterruptedException ex) {
+		} catch (SQLException | InterruptedException ex) {
 			ex.printStackTrace();
 		}
-		dataSource.close();
-	}
-
-	@Override
-	protected Connection getConnection() throws SQLException {
-		return dataSource.getConnection();
 	}
 	
 }

@@ -30,9 +30,9 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
-import space.arim.api.uuid.UUIDUtil;
-
 import space.arim.swiftconomy.core.AbstractSwiftConomy;
+
+import space.arim.uuidvault.api.UUIDUtil;
 
 public class OmegaSwiftConomy extends AbstractSwiftConomy {
 
@@ -61,7 +61,7 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 	@Override
 	protected AtomicLong getRawBalance(UUID uuid) {
 		OmegaPlayer player = omega.getPlayer(uuid);
-		return (player != null) ? player.getStats().getBalance() : null;
+		return (player != null) ? player.getBalance() : null;
 	}
 	
 	private static void potentiallyAddToList(List<BaltopEntry> entries, UUID uuid, String name, long balance) {
@@ -85,20 +85,29 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 	public CompletableFuture<BaltopEntry> findOfflineBalance(String name) {
 		OmegaPlayer player = omega.getPlayerByName(name);
 		if (player != null) {
-			return CompletableFuture.completedFuture(new BaltopEntry(player.getUuid(), player.getName(), player.getStats().getBalance().get()));
+			return CompletableFuture.completedFuture(new BaltopEntry(player.getUuid(), player.getName(), player.getBalance().get()));
 		}
 		OmegaSql sql = omega.sql;
-		return omega.findPlayerInfo(name).thenCompose((info) -> (info == null) ? null : sql.selectAsync(() -> {
-			UUID uuid = info.getUuid();
-			try (ResultSet rs = sql.selectionQuery("SELECT `balance` FROM `omega_stats` WHERE `uuid` = UNHEX(?)", uuid.toString().replace("-", ""))) {
-
-				return new BaltopEntry(uuid, info.getName(), (rs.next()) ? rs.getLong("balance") : STARTING_BALANCE);
-
+		return sql.selectAsync(() -> {
+			/*
+			 * SQL Objective
+			 * Select balance, uuid, and latest name of offline player using the given name and the most up-to-date
+			 * UUID matching the given name.
+			 */
+			try (ResultSet rs = sql.select("SELECT `identify`.`uuid` AS `final_uuid`, `identify`.`name` AS `final_name`, `numbers`.`balance` "
+					+ "FROM `omega_identify` `identify` "
+					+ "INNER JOIN `omega_numbers` `numbers` "
+					+ "ON (`identify`.`uuid` = `numbers`.`uuid`) "
+					+ "ORDER BY `identify`.`updated` DESC LIMIT 1")) {
+				if (rs.next()) {
+					// 1 = uuid, 2 = name, 3 = balance
+					return new BaltopEntry(UUIDUtil.uuidFromByteArray(rs.getBytes("final_uuid")), rs.getString("final_name"), rs.getLong("balance"));
+				}
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
 			return null;
-		}));
+		});
 	}
 	
 	public CompletableFuture<List<BaltopEntry>> getTopBalances() {
@@ -107,12 +116,24 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 			List<BaltopEntry> entries = new ArrayList<>();
 
 			omega.forEach((uuid, player) ->
-				potentiallyAddToList(entries, uuid, player.getName(), player.getStats().getBalance().get()));
+				potentiallyAddToList(entries, uuid, player.getName(), player.getBalance().get()));
 
-			try (ResultSet rs = sql.selectionQuery("SELECT `HEX(uuid),name,balance` FROM `omega_stats` ORDER BY `balance` DESC LIMIT " + BALTOP_SIZE)) {
+			/*
+			 * SQL Objective
+			 * Select top 5 balances, corresponding UUIDs, and corresponding most up-to-date name
+			 */
+			try (ResultSet rs = sql.select("SELECT `identify`.`uuid` AS `final_uuid`, `identify`.`name` AS `final_name`, `numbers`.`balance` "
+					+ "FROM `omega_identify` `identify` "
+					+ "LEFT JOIN `omega_identify` `identifyAlso` "
+					+ "ON (`identify`.`uuid` = `identifyAlso`.`uuid` AND `identify`.`updated` < `identifyAlso`.`updated`) "
+					+ "INNER JOIN `omega_numbers` `numbers` "
+					+ "ON (`identify`.`uuid` = `numbers`.`uuid`) "
+					+ "WHERE `identifyAlso`.`uuid` IS NULL "
+					+ "ORDER BY `numbers`.`balance` DESC LIMIT " + BALTOP_SIZE)) {
+
 				while (rs.next()) {
 
-					UUID uuid = UUIDUtil.expandAndParse(rs.getString("HEX(uuid)"));
+					UUID uuid = UUIDUtil.uuidFromByteArray(rs.getBytes("final_uuid"));
 
 					// check if we already accounted for this player earlier
 					boolean found = false;
@@ -123,7 +144,7 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 						}
 					}
 					if (!found) {
-						potentiallyAddToList(entries, uuid, rs.getString("name"), rs.getLong("balance"));
+						potentiallyAddToList(entries, uuid, rs.getString("final_name"), rs.getLong("balance"));
 					}
 				}
 			} catch (SQLException ex) {

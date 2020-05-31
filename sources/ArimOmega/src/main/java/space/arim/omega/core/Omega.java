@@ -23,8 +23,6 @@ import java.io.FileNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,9 +44,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import space.arim.api.concurrent.AsyncStartingModule;
 import space.arim.api.config.SimpleConfig;
-import space.arim.api.uuid.UUIDUtil;
 
 import space.arim.omega.util.BytesUtil;
+
+import space.arim.uuidvault.api.UUIDUtil;
 
 import lombok.Getter;
 import net.milkbowl.vault.economy.Economy;
@@ -67,15 +66,6 @@ public class Omega implements AsyncStartingModule {
 	private List<Rank> ranks;
 	
 	private CompletableFuture<?> future;
-	
-	/**
-	 * Minutes within a month, equal to 1440 (seconds in a day) times 30 (days in a month). <br>
-	 * Sort of like a unix timestamp but in minutes, not seconds, to save space. <br>
-	 * <br>
-	 * This is used with the monthly reward of the player, which is also in minutes.
-	 * 
-	 */
-	static final int MINUTES_IN_MONTH = 1440 * 30;
 	
 	/**
 	 * Milliseconds within a minute, used to divide into System.currentTimeMillis
@@ -250,24 +240,6 @@ public class Omega implements AsyncStartingModule {
 		return (int) System.currentTimeMillis() / MILLIS_IN_MINUTE;
 	}
 	
-	private static void potentiallyAddToSetArray(byte[][] checkFor, Set<AltcheckEntry>[] preresult, UUID uuid, String name, byte[][] addresses) {
-		for (int m = 0; m < addresses.length; m++) {
-			AltcheckEntry cachedEntry = null;
-			for (int n = 0; n < checkFor.length; n++) {
-				byte[] address = addresses[n];
-				if (Arrays.equals(checkFor[n], address)) {
-					if (cachedEntry == null) {
-						cachedEntry = new AltcheckEntry(uuid, name, address);
-					}
-					if (preresult[n] == null) {
-						preresult[n] = new HashSet<>();
-					}
-					preresult[n].add(cachedEntry);
-				}
-			}
-		}
-	}
-	
 	/**
 	 * Gets an online player by name
 	 * 
@@ -285,26 +257,22 @@ public class Omega implements AsyncStartingModule {
 	
 	/**
 	 * Finds a player by name, returns UUID and name. <br>
-	 * The input name is case insensitive, while the output name is correctly capitalised. <br>
-	 * <br>
-	 * Note that the result of the completable future will have null IPs, use
-	 * {@link #findPlayerInfoWithIPs(String)} if IPs are desired.
+	 * The input name is case insensitive, while the output name is correctly capitalised.
 	 * 
 	 * @param name the player name
-	 * @return a completable future whose result is <code>null</code> if not found
+	 * @return a completable future of player info whose result is <code>null</code> if not found
 	 */
-	public CompletableFuture<IdentifyingPlayerInfo> findPlayerInfo(String name) {
+	public CompletableFuture<PlayerInfo> findPlayerInfo(String name) {
 		OmegaPlayer player = getPlayerByName(name);
 		if (player != null) {
-			return CompletableFuture.completedFuture(new IdentifyingPlayerInfo(player.getUuid(), player.getName(), null));
+			return CompletableFuture.completedFuture(new PlayerInfo(player.getUuid(), player.getName()));
 		}
 		// MySQL is not case sensitive https://stackoverflow.com/a/61484046/6548501
 		return sql.selectAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT `HEX(uuid),name` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
+			try (ResultSet rs = sql.select("SELECT `uuid`, `name` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
+				
 				if (rs.next()) {
-
-					return new IdentifyingPlayerInfo(UUIDUtil.expandAndParse(rs.getString("HEX(uuid)")),
-							rs.getString("name"), null);
+					return new PlayerInfo(UUIDUtil.uuidFromByteArray(rs.getBytes("uuid")), rs.getString("name"));
 				}
 			} catch (SQLException ex) {
 				ex.printStackTrace();
@@ -318,20 +286,33 @@ public class Omega implements AsyncStartingModule {
 	 * The input name is case insensitive, while the output name is correctly capitalised.
 	 * 
 	 * @param name the player name
-	 * @return a completable future whose result is <code>null</code> if not found
+	 * @return a completable future of player info whose result is <code>null</code> if not found
 	 */
-	public CompletableFuture<IdentifyingPlayerInfo> findPlayerInfoWithIPs(String name) {
-		OmegaPlayer player = getPlayerByName(name);
-		if (player != null) {
-			return CompletableFuture.completedFuture(new IdentifyingPlayerInfo(player.getUuid(), player.getName(), player.getIps()));
-		}
+	public CompletableFuture<PlayerInfoWithAddresses> findPlayerInfoWithIPs(String name) {
 		return sql.selectAsync(() -> {
-			try (ResultSet rs = sql.selectionQuery("SELECT `HEX(uuid),name,ips` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
-				if (rs.next()) {
+			/*
+			 * SQL Objective
+			 * Select all IP addresses of the UUID corresponding to the most recent occurence of the name.
+			 */
+			try (ResultSet rs = sql.select("SELECT DISTINCT `uuid`, `address` "
+					+ "FROM `omega_identify` "
+					+ "WHERE `uuid` IN "
+					+ "(SELECT `uuid` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1)")) {
 
-					return new IdentifyingPlayerInfo(UUIDUtil.expandAndParse(rs.getString("HEX(uuid)")),
-							rs.getString("name"), OmegaPlayer.decodeIps(rs.getString("ips")));
+				List<Byte[]> ips = null;
+				while (rs.next()) {
+					if (ips == null) {
+						ips = new ArrayList<>();
+					}
+					ips.add(BytesUtil.boxAll(rs.getBytes("address")));
 				}
+				if (ips == null) {
+					// Empty result set
+					return null;
+				}
+				return new PlayerInfoWithAddresses(UUIDUtil.uuidFromByteArray(rs.getBytes("uuid")),
+						rs.getString("name"), BytesUtil.unboxAll2D(ips.toArray(new Byte[][] {})));
+
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
@@ -339,54 +320,123 @@ public class Omega implements AsyncStartingModule {
 		});
 	}
 	
-	/**
-	 * Conducts an alt check for a player. <br>
-	 * The result is a map of the addresses to sets of AltcheckEntry.
-	 * The corresponding set is null if no players matched the address.
-	 * 
-	 * @param playerInfo identifying player info including IP addresses
-	 * @return a completable future whose result is never null
-	 */
-	public CompletableFuture<Map<Byte[], Set<AltcheckEntry>>> conductAltcheck(IdentifyingPlayerInfo playerInfo) {
+	private CompletableFuture<Map<Byte[], Set<PlayerInfo>>> conductAltcheck(UUID uuid) {
 		return sql.selectAsync(() -> {
-			UUID uuid = playerInfo.getUuid();
-			byte[][] checkFor = playerInfo.getAddresses();
+			Map<Byte[], Set<PlayerInfo>> result = new HashMap<>();
+			byte[] rawUUID = UUIDUtil.byteArrayFromUUID(uuid);
+			/*
+			 * SQL Objective
+			 * Find other player UUIDs, with latest names, whose addresses match that of the target UUID
+			 */
+			try (ResultSet rs = sql.select("SELECT `identify`.`uuid` AS `final_uuid`, `identify`.`name` AS `final_name`, `identify`.`address` as `final_address` "
+					+ "FROM `omega_identify` `identify` "
+					+ "LEFT JOIN `omega_identify` `identifyAlso` "
+					+ "ON (`identify`.`uuid` = `identifyAlso`.`uuid` AND `identify`.`address` = `identifyAlso`.`address` AND `identify`.`updated` < `identifyAlso`.`updated`) "
+					+ "WHERE `identifyAlso`.`uuid` IS NULL AND `identify`.`uuid` != ? "
+					+ "AND `identify`.`address` IN (SELECT `address` FROM `omega_identify` WHERE `uuid` = ?)", rawUUID, rawUUID)) {
 
-			// the index of the preresult array corresponds to that of the checkFor array
-			@SuppressWarnings("unchecked")
-			Set<AltcheckEntry>[] preresult = (Set<AltcheckEntry>[]) new Set<?>[checkFor.length];
-
-			players.forEach((uuidOther, player) -> {
-				if (!uuid.equals(uuidOther)) {
-					potentiallyAddToSetArray(checkFor, preresult, uuidOther, player.getName(), player.getIps());
-				}
-			});
-
-			StringBuilder builder = new StringBuilder();
-			for (byte[] ip : checkFor) {
-				String encodedIp = Base64.getEncoder().encodeToString(ip);
-				assert encodedIp.indexOf('%') == -1;
-
-				builder.append(" OR `ips` LIKE BINARY '%").append(encodedIp).append("%'");
-			}
-			String ipScanPredicate = builder.substring(" OR ".length());
-			try (ResultSet rs = sql.selectionQuery("SELECT `HEX(uuid),name,ips` FROM `omega_identify` WHERE `uuid` != UNHEX(?) AND (" + ipScanPredicate + ")",
-					uuid.toString().replace("-", ""))) {
 				while (rs.next()) {
-
-					potentiallyAddToSetArray(checkFor, preresult, UUIDUtil.expandAndParse(rs.getString("HEX(uuid)")),
-							rs.getString("name"), OmegaPlayer.decodeIps(rs.getString("ips")));
+					result.computeIfAbsent(BytesUtil.boxAll(rs.getBytes("final_address`")), (k) -> new HashSet<>())
+							.add(new PlayerInfo(UUIDUtil.uuidFromByteArray(rs.getBytes("final_uuid")), rs.getString("final_name")));
 				}
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
-			// build the result
-			Map<Byte[], Set<AltcheckEntry>> result = new HashMap<>();
-			for (int n = 0; n < checkFor.length; n++) {
-				result.put(BytesUtil.boxAll(checkFor[n]), preresult[n]);
+			return result;
+		});
+	}
+	
+	/**
+	 * Conducts an alt check for a player name. To find a target,
+	 * The most recent UUID which had the name is used. <br>
+	 * Then, an alt check is conducted to find the other players
+	 * whose addresses match that of the target. <br>
+	 * <br>
+	 * The result is a map of the target's addresses to sets of PlayerInfo.
+	 * There is no corresponding set if no players matched the address. <br>
+	 * <br>
+	 * If the altcheck yields no results, either because the player with the name
+	 * was not found, or because no other addresses
+	 * 
+	 * @param name the player name
+	 * @return a completable future whose result is a map which is empty if the altcheck yielded no results
+	 */
+	public CompletableFuture<Map<Byte[], Set<PlayerInfo>>> conductAltcheck(String name) {
+		return findPlayerInfo(name).thenCompose((info) -> (info == null) ? CompletableFuture.completedFuture(null) : conductAltcheck(info));
+		// TODO
+		// We can't use this until ArimAPI adds support for composite results
+		/*
+		sql.selectAsync(() -> {
+			Map<Byte[], Set<PlayerInfo>> result = new HashMap<>();
+			/*
+			 * SQL Objective
+			 * Find other player names whose addresses match the UUID corresponding to the name,
+			 * all using the most up-to-date name records.
+			 */
+			/*try (ResultSet rs = sql.select("CREATE VIEW `tempViewUuid` AS "
+					+ "SELECT `uuid` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1; "
+					
+					+ "CREATE VIEW `tempViewAddresses` "
+					+ "AS SELECT `address` FROM `omega_identify` WHERE `uuid` IN (SELECT `uuid` FROM `tempViewUuid`); "
+					
+					+ "SELECT `identify`.`uuid` AS `final_uuid`, `identify`.`name` AS `final_name`, `identify`.`address` AS `final_address` "
+					+ "FROM `omega_identify` `identify` "
+					+ "LEFT JOIN `omega_identify` `identifyAlso` "
+					+ "ON (`identify`.`uuid` = `identifyAlso`.`uuid` AND `identify`.`address` = `identifyAlso`.`address` AND `identify`.`updated` < `identifyAlso`.`updated`) "
+					+ "WHERE `identifyAlso`.`uuid` IS NULL AND `identify`.`uuid` NOT IN (SELECT `uuid` FROM `tempViewUuid`) "
+					+ "AND `identify`.`address` IN (SELECT `address` FROM `tempViewAddresses`); "
+					
+					+ "DROP VIEW `tempViewAddresses`; "
+					+ "DROP VIEW `tempViewUuid`", name)) {
+				
+				while (rs.next()) {
+					result.computeIfAbsent(BytesUtil.boxAll(rs.getBytes("final_address`")), (k) -> new HashSet<>())
+							.add(new PlayerInfo(UUIDUtil.uuidFromByteArray(rs.getBytes("final_uuid")), rs.getString("final_name")));
+				}
+			} catch (SQLException ex) {
+				ex.printStackTrace();
 			}
 			return result;
 		});
+		*/
+		/*
+		 * "This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"
+		 * So, our subquery can't work because it requires LIMIT
+		 * 
+		 */
+		/*
+		OmegaPlayer player = getPlayerByName(name);
+		if (player != null) {
+			return conductAltcheck(player.getUuid());
+		}
+		return sql.selectAsync(() -> {
+			Map<Byte[], Set<PlayerInfo>> result = new HashMap<>();
+			try (ResultSet rs = sql.select("SELECT * FROM `omega_identify` `identify` "
+					+ "LEFT JOIN `omega_identify` `identifyAlso` "
+					+ "ON (`identify`.`uuid` = `identifyAlso`.`uuid` AND `identify`.`address` = `identifyAlso`.`address` AND `identify`.`updated` < `identifyAlso`.`updated`) "
+					+ "WHERE `identifyAlso`.`uuid` IS NULL AND `identify`.`address` IN "
+					+ "(SELECT DISTINCT `address` FROM `omega_identify` WHERE `uuid` IN (SELECT `uuid` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1))")) {
+				
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			return result;
+		});
+		*/
+	}
+	
+	/**
+	 * Conducts an altcheck based on the target with the UUID and name. <br>
+	 * The altcheck will find other players whose addresses match that of the target. <br>
+	 * <br>
+	 * The result is a map of the target's addresses to sets of PlayerInfo.
+	 * There is no corresponding set if no other players matched the address.
+	 * 
+	 * @param info the player info of the target
+	 * @return a completable future whose result is a map which is never null
+	 */
+	public CompletableFuture<Map<Byte[], Set<PlayerInfo>>> conductAltcheck(PlayerInfo info) {
+		return conductAltcheck(info.getUuid());
 	}
 	
 	/**

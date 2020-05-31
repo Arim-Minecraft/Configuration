@@ -93,7 +93,7 @@ public class EconomyCommands implements CommandExecutor {
 					}
 				});
 			} else if (sender instanceof Player) {
-				plugin.sendMessage(sender, "&7Your balance is &a" + economy.displayBalance(plugin.omega.getPlayer((Player) sender).getStats().getCurrentBalance()));
+				plugin.sendMessage(sender, "&7Your balance is &a" + economy.displayBalance(plugin.omega.getPlayer((Player) sender).getCurrentBalance()));
 			} else {
 				plugin.sendMessage(sender, "&cSpecify a player.");
 			}

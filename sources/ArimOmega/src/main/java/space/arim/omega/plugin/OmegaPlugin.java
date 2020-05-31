@@ -22,15 +22,14 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import space.arim.omega.core.AltcheckEntry;
 import space.arim.omega.core.Omega;
+import space.arim.omega.core.PlayerInfo;
 import space.arim.omega.util.BytesUtil;
 
 public class OmegaPlugin extends JavaPlugin {
@@ -60,24 +59,18 @@ public class OmegaPlugin extends JavaPlugin {
 		if (command.getName().equals("altcheck")) {
 			if (sender.hasPermission("arim.helper")) {
 				if (args.length >= 1) {
-					omega.findPlayerInfoWithIPs(args[0]).thenCompose((info) -> {
-						return (info == null) ? CompletableFuture.completedFuture(null) : omega.conductAltcheck(info);
-
-					}).thenAccept((map) -> {
+					omega.conductAltcheck(args[0]).thenAccept((map) -> {
 						if (map == null) {
 							sendMessage(sender, "&6Arim>> &cPlayer &e" + args[0] + "&c not found.");
 							return;
 						}
 						boolean found = false;
-						for (Map.Entry<Byte[], Set<AltcheckEntry>> entry : map.entrySet()) {
-							Set<AltcheckEntry> matches = entry.getValue();
-							if (matches == null) {
-								continue;
-							}
+						for (Map.Entry<Byte[], Set<PlayerInfo>> entry : map.entrySet()) {
+							Set<PlayerInfo> matches = entry.getValue();
 							try {
 								String address = InetAddress.getByAddress(BytesUtil.unboxAll(entry.getKey())).getHostAddress();
 								StringBuilder builder = new StringBuilder();
-								for (AltcheckEntry match : matches) {
+								for (PlayerInfo match : matches) {
 									builder.append(',').append(match.getName());
 								}
 								sendMessage(sender, "&7IP: &e" + address + "&7. Players: " + builder.substring(0) + ".");

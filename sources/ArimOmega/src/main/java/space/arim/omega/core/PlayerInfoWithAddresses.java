@@ -20,15 +20,16 @@ package space.arim.omega.core;
 
 import java.util.UUID;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
-public class IdentifyingPlayerInfo {
+public class PlayerInfoWithAddresses extends PlayerInfo {
 
-	private final UUID uuid;
-	private final String name;
 	private final byte[][] addresses;
+	
+	public PlayerInfoWithAddresses(UUID uuid, String name, byte[][] addresses) {
+		super(uuid, name);
+		this.addresses = addresses;
+	}
 	
 }
