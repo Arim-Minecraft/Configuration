@@ -153,7 +153,7 @@ public class OmegaSwiftConomy extends AbstractSwiftConomy {
 					}
 				}
 			} catch (SQLException ex) {
-				logger.error("Error determing baltop", ex);
+				logger.error("Error determining baltop", ex);
 			}
 			return entries;
 		});
