@@ -8,7 +8,7 @@ load: STARTUP
 
 commands:
   pay:
-    aliases: [/transact]
+    aliases: [transact]
     usage: /pay
     description: Pay another player
   bal:
