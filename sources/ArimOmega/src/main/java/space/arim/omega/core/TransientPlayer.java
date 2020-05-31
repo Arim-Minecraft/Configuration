@@ -23,6 +23,13 @@ import org.bukkit.entity.Player;
 
 import lombok.Getter;
 
+/**
+ * Transient player information, a lot of which relates to world state. <br>
+ * It should be assumed that methods are not thread safe unless explicitly specified.
+ * 
+ * @author A248
+ *
+ */
 public class TransientPlayer {
 
 	private final Omega omega;
