@@ -54,7 +54,7 @@ public class PlayerNumbers {
 	 * world chat = true
 	 * 
 	 */
-	private static final int DEFAULT_TOGGLE_PREFS = byteFromBooleanArray(new boolean[] {false, false, true, true, false, true, true, true});
+	private static final int DEFAULT_TOGGLE_PREFS = 0b00110111;
 	
 	/**
 	 * Creates the default values for player info
@@ -74,44 +74,6 @@ public class PlayerNumbers {
 		return balance == DEFAULT_BALANCE && Arrays.equals(integer_stats, DEFAULT_INTEGER_STATS)
 				&& toggle_prefs == DEFAULT_TOGGLE_PREFS && chatcolour == 'f' && namecolour == 'b';
 	}*/
-	
-	/**
-	 * Converts the bits of a byte to a boolean array. <br>
-	 * E.g., 11110101 => true, true, true, true, false, true, false true
-	 * 
-	 * @param source the source byte, really an int to avoid casting
-	 * @return the boolean array, always of length 8
-	 */
-	static boolean[] booleanArrayFromByte(int source) {
-		boolean[] result = new boolean[8];
-	    result[0] = ((source & 0x01) != 0);
-	    result[1] = ((source & 0x02) != 0);
-	    result[2] = ((source & 0x04) != 0);
-	    result[3] = ((source & 0x08) != 0);
-	    result[4] = ((source & 0x10) != 0);
-	    result[5] = ((source & 0x20) != 0);
-	    result[6] = ((source & 0x40) != 0);
-	    result[7] = ((source & 0x80) != 0);
-	    return result;
-	}
-	
-	/**
-	 * Converts a boolean array to a byte, where each boolean
-	 * determines a bit of the byte. <br>
-	 * <br>
-	 * This is the inverse operation of {@link #booleanArrayFromByte(int)}. <br>
-	 * Note that the source array must have length 8.
-	 * 
-	 * @param source the boolean array, must be length 8
-	 * @return an int rather than a byte to avoid casting
-	 */
-	static int byteFromBooleanArray(boolean[] source) {
-		assert source.length == 8;
-
-		return ((source[7] ? 1<<7 : 0) + (source[6] ? 1<<6 : 0) + (source[5] ? 1<<5 : 0) + 
-                (source[4] ? 1<<4 : 0) + (source[3] ? 1<<3 : 0) + (source[2] ? 1<<2 : 0) + 
-                (source[1] ? 1<<1 : 0) + (source[0] ? 1 : 0));
-	}
 	
 	/*
 	 * Faster version of AtomicInteger#compareAndSet

@@ -356,7 +356,11 @@ public class OmegaPlayer {
 	 * @return the current preference
 	 */
 	public boolean getPreference(int index) {
-		return PlayerNumbers.booleanArrayFromByte(toggle_prefs.get())[index];
+		assert 0 <= index && index <= 7;
+
+		int pref = 1 << index;
+		int current = toggle_prefs.get();
+		return (current & pref) != 0;
 	}
 	
 	/**
@@ -371,18 +375,15 @@ public class OmegaPlayer {
 	 */
 	public boolean togglePreference(int index) {
 		assert 0 <= index && index <= 7;
-		
-		// using bytes creates a lot of unnecessary casting
+
+		int pref = 1 << index;
 		int existing;
 		int update;
-		boolean result;
 		do {
 			existing = toggle_prefs.get();
-			boolean[] change = PlayerNumbers.booleanArrayFromByte(existing);
-			result = change[index] = !change[index];
-			update = PlayerNumbers.byteFromBooleanArray(change);
+			update = existing ^ pref;
 		} while (!PlayerNumbers.compareAndSetInteger(toggle_prefs, existing, update));
-		return result;
+		return (update & pref) != 0;
 	}
 	
 	/*
