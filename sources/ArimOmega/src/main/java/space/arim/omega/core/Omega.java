@@ -272,7 +272,7 @@ public class Omega implements AsyncStartingModule {
 		// MySQL is not case sensitive https://stackoverflow.com/a/61484046/6548501
 		return sql.selectAsync(() -> {
 			try (ResultSet rs = sql.select("SELECT `uuid`, `name` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1", name)) {
-				
+
 				if (rs.next()) {
 					return new PlayerInfo(UUIDUtil.uuidFromByteArray(rs.getBytes("uuid")), rs.getString("name"));
 				}
@@ -376,8 +376,8 @@ public class Omega implements AsyncStartingModule {
 			try (CompositeQueryResult cqr = sql.composite("CREATE VIEW `tempViewUuid` AS "
 					+ "SELECT `uuid` FROM `omega_identify` WHERE `name` = ? ORDER BY `updated` DESC LIMIT 1; "
 					
-					+ "CREATE VIEW `tempViewAddresses` "
-					+ "AS SELECT `address` FROM `omega_identify` WHERE `uuid` IN (SELECT `uuid` FROM `tempViewUuid`); "
+					+ "CREATE VIEW `tempViewAddresses` AS "
+					+ "SELECT `address` FROM `omega_identify` WHERE `uuid` IN (SELECT `uuid` FROM `tempViewUuid`); "
 					
 					+ "SELECT `identify`.`uuid` AS `final_uuid`, `identify`.`name` AS `final_name`, `identify`.`address` AS `final_address` "
 					+ "FROM `omega_identify` `identify` "
@@ -402,8 +402,6 @@ public class Omega implements AsyncStartingModule {
 		});
 		/*
 		 * "This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"
-		 * So, our subquery can't work because it requires LIMIT
-		 * 
 		 */
 		/*
 		OmegaPlayer player = getPlayerByName(name);
