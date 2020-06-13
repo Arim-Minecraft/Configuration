@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -39,13 +40,13 @@ public class OmegaPlugin extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		omega = new Omega(getDataFolder());
-		omega.registerWith(this);
-		omega.startLoad();
-		getServer().getScheduler().runTaskLater(this, omega::finishLoad, 1L);
+		CompletableFuture<?> future = omega.startLoad();
+		getServer().getScheduler().runTask(this, future::join);
 		EconomyCommands ecoCmds = new EconomyCommands(this);
 		getServer().getPluginCommand("pay").setExecutor(ecoCmds);
 		getServer().getPluginCommand("bal").setExecutor(ecoCmds);
 		getServer().getPluginCommand("baltop").setExecutor(ecoCmds);
+		omega.registerWith(this);
 	}
 	
 	@Override

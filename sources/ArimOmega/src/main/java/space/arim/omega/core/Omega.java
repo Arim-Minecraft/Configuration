@@ -43,7 +43,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import space.arim.api.concurrent.AsyncStartingModule;
+import space.arim.universal.util.AutoClosable;
+
 import space.arim.api.config.SimpleConfig;
 import space.arim.api.util.sql.CompositeQueryResult;
 
@@ -54,7 +55,7 @@ import space.arim.uuidvault.api.UUIDUtil;
 import lombok.Getter;
 import net.milkbowl.vault.economy.Economy;
 
-public class Omega implements AsyncStartingModule {
+public class Omega implements AutoClosable {
 
 	private final File dataFolder;
 	private final ConcurrentHashMap<UUID, OmegaPlayer> players = new ConcurrentHashMap<>();
@@ -65,8 +66,6 @@ public class Omega implements AsyncStartingModule {
 	private final OmegaSwiftConomy economy;
 	
 	private List<Rank> ranks;
-	
-	private CompletableFuture<?> future;
 	
 	/**
 	 * Milliseconds within a minute, used to divide into System.currentTimeMillis
@@ -93,13 +92,13 @@ public class Omega implements AsyncStartingModule {
 
 	public void registerWith(JavaPlugin plugin) {
 		Server server = plugin.getServer();
+		loader.hookLogin();
 		server.getPluginManager().registerEvents(loader, plugin);
 		server.getServicesManager().register(Economy.class, economy, plugin, ServicePriority.High);
 	}
 
-	@Override
-	public void startLoad() {
-		future = CompletableFuture.allOf(sql.makeTablesIfNotExist(), CompletableFuture.runAsync(() -> {
+	public CompletableFuture<?> startLoad() {
+		return CompletableFuture.allOf(sql.makeTablesIfNotExist(), CompletableFuture.runAsync(() -> {
 			List<Rank> ranks = new ArrayList<>();
 			try (Scanner scanner = new Scanner(new File(dataFolder, "ranks.txt"), "UTF-8")) {
 				ArrayList<String> lines = new ArrayList<>(4);
@@ -115,12 +114,6 @@ public class Omega implements AsyncStartingModule {
 			}
 			this.ranks = ranks;
 		}));
-	}
-	
-	@Override
-	public void finishLoad() {
-		future.join();
-		future = null;
 	}
 	
 	/**

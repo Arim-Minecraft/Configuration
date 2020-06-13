@@ -50,12 +50,15 @@ public class OmegaDataLoader implements Listener, AutoClosable {
 
 	private final Omega omega;
 	
-	final Cache<UUID, PartialPlayer> pending;
+	private final Cache<UUID, PartialPlayer> pending;
 	
 	OmegaDataLoader(final Omega omega) {
 		this.omega = omega;
 		pending = Caffeine.newBuilder().expireAfterWrite(3, TimeUnit.MINUTES)
 				.<UUID, PartialPlayer>removalListener((uuid, partial, cause) -> partial.abort(omega)).build();
+	}
+	
+	void hookLogin() {
 		ServerStarter.afterAllowed = this::onAPPLE_start;
 	}
 	
