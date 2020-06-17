@@ -5,10 +5,12 @@
 
 target/
 dependency-reduced-pom.xml
-dependencies/
+pom.xml.versionsBackup
 
 ### Eclipse ###
 
+.classpath
+.project
 bin/
 .metadata
 tmp/
@@ -70,4 +72,3 @@ local.properties
 .apt_generated
 
 .sts4-cache/
-
