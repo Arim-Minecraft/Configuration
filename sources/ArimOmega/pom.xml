@@ -168,7 +168,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>space.arim</groupId>
-			<artifactId>arimapi-plugin</artifactId>
+			<artifactId>arimapi-platform</artifactId>
 			<version>${arimapi.version}</version>
 		</dependency>
 		<dependency>
