@@ -50,7 +50,7 @@ public class Misc extends JavaPlugin {
 				(uuid) -> DefaultUUIDResolution.resolveFromCache(this, uuid));
 		altcheck.startLoad();
 
-		getServer().getPluginCommand("altcheck").setExecutor((sender, command, label, args) -> {
+		getCommand("altcheck").setExecutor((sender, command, label, args) -> {
 			if (sender.hasPermission("arim.helper")) {
 				if (args.length > 0) {
 					UUID uuid = altcheck.resolveImmediately(args[0]);
@@ -69,7 +69,7 @@ public class Misc extends JavaPlugin {
 			}
 			return true;
 		});
-		getServer().getPluginCommand("namehistory").setExecutor((sender, command, label, args) -> {
+		getCommand("namehistory").setExecutor((sender, command, label, args) -> {
 			if (sender.hasPermission("arim.helper")) {
 				if (args.length > 0) {
 					UUID uuid = altcheck.resolveImmediately(args[0]);
@@ -103,7 +103,7 @@ public class Misc extends JavaPlugin {
 				}
 			}
 		}
-		getServer().getPluginCommand("bossbars").setExecutor((sender, command, label, args) -> {
+		getCommand("bossbars").setExecutor((sender, command, label, args) -> {
 			if (sender.hasPermission("arim.admin")) {
 				if (args.length >= 2) {
 					int index = 0;

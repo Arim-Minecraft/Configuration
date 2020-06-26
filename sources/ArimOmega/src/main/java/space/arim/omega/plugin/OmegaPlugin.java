@@ -43,9 +43,9 @@ public class OmegaPlugin extends JavaPlugin {
 		CompletableFuture<?> future = omega.startLoad();
 		getServer().getScheduler().runTask(this, future::join);
 		EconomyCommands ecoCmds = new EconomyCommands(this);
-		getServer().getPluginCommand("pay").setExecutor(ecoCmds);
-		getServer().getPluginCommand("bal").setExecutor(ecoCmds);
-		getServer().getPluginCommand("baltop").setExecutor(ecoCmds);
+		getCommand("pay").setExecutor(ecoCmds);
+		getCommand("bal").setExecutor(ecoCmds);
+		getCommand("baltop").setExecutor(ecoCmds);
 		omega.registerWith(this);
 	}
 	
